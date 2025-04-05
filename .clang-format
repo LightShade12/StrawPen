@@ -1,0 +1,16 @@
+---
+BasedOnStyle: Google
+AccessModifierOffset: '-4'
+BreakBeforeBraces: Allman
+BreakBeforeTernaryOperators: 'false'
+IndentWidth: '4'
+NamespaceIndentation: All
+TabWidth: '4'
+UseTab: ForIndentation
+# ColumnLimit: '60'
+---
+Language: Cpp
+DerivePointerAlignment: false
+PointerAlignment: Left
+SpaceBeforeCpp11BracedList: true
+---

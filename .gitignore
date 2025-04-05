@@ -1,3 +1,7 @@
+.history/
+Dist/
+[Bb]uild/
+
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles

@@ -1,0 +1,3 @@
+[submodule "thirdparty/StrawPlate"]
+	path = thirdparty/StrawPlate
+	url = https://github.com/LightShade12/StrawPlate.git
