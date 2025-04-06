@@ -42,8 +42,7 @@ namespace StrawPen
 			{  // You can also use out_file.is_open() or check outFile.fail()
 				throw std::runtime_error("file create error");
 			}
-			out_file.write(m_source_file_char_buff.data(),
-			               m_source_file_char_buff.size());
+			out_file.write(m_source_file_char_buff.data(), m_source_file_char_buff.size());
 			if (out_file.fail())
 			{
 				throw std::runtime_error("file writing error");
@@ -61,35 +60,52 @@ namespace StrawPen
 		{
 			ImGui::Begin("Source Editor");
 			{
+				static bool is_f1open = true;
+
 				if (ImGui::Button("Save"))
 				{
 					if (m_file_name.empty() || m_dir_path.empty())
 					{
-						spdlog::error("[SAVE] No file name given");
+						spdlog::error("[SAVE] invalid path");
 					}
 					else
 					{
 						writeToFile(getFullPath().c_str());
 					}
 				}
-
 				ImGui::SameLine();
+
 				if (ImGui::Button("Compile"))
 				{
 				}
 				ImGui::SameLine();
+
 				if (ImGui::Button("Execute"))
 				{
 				}
 				ImGui::SameLine();
+
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.8);
-				ImGui::InputTextWithHint(":File Name", "main.cxx",
-				                         &m_file_name);
+				ImGui::InputTextWithHint(":File Name", "main.cxx", &m_file_name);
 
-				ImGui::Text("%s", getFullPath().c_str());
+				// ================
+				ImGui::BeginChild("filetabsys");
+				{
+					if (ImGui::BeginTabBar("filetabs", ImGuiTabBarFlags_None))
+					{
+						if (ImGui::BeginTabItem(m_file_name.c_str(), &is_f1open))
+						{
+							ImGui::Text("%s", getFullPath().c_str());  // FILEPATH
 
-				ImGui::InputTextMultiline("###Text", &(m_source_file_char_buff),
-				                          ImGui::GetContentRegionAvail());
+							ImGui::InputTextMultiline("###srctextinput", &(m_source_file_char_buff),
+							                          ImGui::GetContentRegionAvail());
+
+							ImGui::EndTabItem();
+						}
+						ImGui::EndTabBar();
+					}
+				}
+				ImGui::EndChild();
 			}
 			ImGui::End();
 		}
