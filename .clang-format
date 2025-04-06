@@ -7,7 +7,7 @@ IndentWidth: '4'
 NamespaceIndentation: All
 TabWidth: '4'
 UseTab: ForIndentation
-# ColumnLimit: '60'
+ColumnLimit: '80'
 ---
 Language: Cpp
 DerivePointerAlignment: false

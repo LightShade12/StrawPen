@@ -27,16 +27,16 @@ endif()
 
 #--------- Dependencies -----------
 # CMake variant
-# add_subdirectory(thirdparty/StrawPlate)
-# target_link_libraries(strawpen PRIVATE StrawPlate)
+add_subdirectory(thirdparty/StrawPlate)
+target_link_libraries(strawpen PRIVATE StrawPlate)
 # Dist variant
 # target_include_directories(strawpen PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/StrawPlate/build/Dist/include")
 # target_include_directories(strawpen PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/StrawPlate/build/Dist/include/imgui")
 # target_include_directories(strawpen PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/StrawPlate/build/Dist/include/stbi")
 # target_link_directories(strawpen PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/StrawPlate/build/Dist/lib")
 # target_link_libraries(strawpen PRIVATE strawplate_rel.lib glad.lib glfw3.lib imgui.lib stbi.lib)
-add_subdirectory(thirdparty/StrawPlate/build/Dist)
-target_link_libraries(strawpen PRIVATE strawplatelib)
+# add_subdirectory(thirdparty/StrawPlate/build/Dist)
+# target_link_libraries(strawpen PRIVATE strawplatelib)
 
 # Assets 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets

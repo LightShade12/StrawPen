@@ -1,5 +1,6 @@
-#include "strawplate/strawplate.hpp"
-//======
+#include "editor.hpp"
+
+// ======================
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -11,17 +12,19 @@ int main(int argc, char* argv[])
 	{
 		StrawPlate::WindowSettings win_settings;
 		win_settings.label = "StrawPen Editor";
+		win_settings.width = 1920 * 0.5;
+		win_settings.height = 1080 * 0.5;
 
 		std::shared_ptr<StrawPlate::LayerMaker> layer_factory =
 		    std::make_shared<
-		        StrawPlate::ConcreteLayerMaker<StrawPlate::SampleLayer>>();
+		        StrawPlate::ConcreteLayerMaker<StrawPen::EditorLayer>>();
 
 		StrawPlate::GLFWApplication app(win_settings, layer_factory);
 		app.run();
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "CAUGHT EXCEPTION:" << e.what() << '\n';
+		spdlog::critical("EXCEPTION: {}\n", e.what());
 		return EXIT_FAILURE;
 	}
 
