@@ -19,7 +19,7 @@ namespace StrawPen
 	public:
 		EditorLayer()
 		    : m_explorer(std::filesystem::current_path().string().c_str()),
-		      m_source(std::filesystem::current_path().string().c_str()) {};
+		      m_source(std::filesystem::current_path()) {};
 		~EditorLayer() override = default;
 
 		EditorLayer(const EditorLayer& other) = default;
@@ -34,9 +34,8 @@ namespace StrawPen
 
 		void onRender(float timestep_secs) override
 		{
-			ImGui::DockSpaceOverViewport(
-			    0, ImGui::GetMainViewport(),
-			    ImGuiDockNodeFlags_PassthruCentralNode);
+			ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(),
+			                             ImGuiDockNodeFlags_PassthruCentralNode);
 			{
 				ImGui::BeginMainMenuBar();
 				if (ImGui::BeginMenu("File"))
@@ -74,8 +73,8 @@ namespace StrawPen
 
 		void onInput(int key, int scancode, int action, int mods) override
 		{
-			if (glfwGetKeyScancode(GLFW_KEY_S) == scancode &&
-			    (action == GLFW_PRESS) && (mods & GLFW_MOD_CONTROL))
+			if (glfwGetKeyScancode(GLFW_KEY_S) == scancode && (action == GLFW_PRESS) &&
+			    (mods & GLFW_MOD_CONTROL))
 			{
 				m_source.writeToFile(m_explorer.getCurrentDirectory().c_str());
 			}
