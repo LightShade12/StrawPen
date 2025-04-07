@@ -13,8 +13,7 @@ namespace StrawPen
 	class DirectoryExplorer
 	{
 	public:
-		explicit DirectoryExplorer(const char* current_dir)
-		    : m_project_path(current_dir)
+		explicit DirectoryExplorer(std::filesystem::path working_dir) : m_project_path(working_dir)
 		{
 			refreshDir();
 		};
@@ -22,8 +21,7 @@ namespace StrawPen
 		void refreshDir()
 		{
 			int curr_lv_dir_items = 0;
-			for (const auto& entry :
-			     std::filesystem::directory_iterator(m_project_path))
+			for (const auto& entry : std::filesystem::directory_iterator(m_project_path))
 			{
 				curr_lv_dir_items++;
 			}
@@ -37,8 +35,7 @@ namespace StrawPen
 			{
 				// ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
 				int i = 0;
-				for (const auto& entry :
-				     std::filesystem::directory_iterator(dir_path))
+				for (const auto& entry : std::filesystem::directory_iterator(dir_path))
 				{
 					if (entry.is_directory())
 					{
@@ -49,9 +46,8 @@ namespace StrawPen
 						// file object
 						ImGui::TreeNodeEx(
 						    (void*)(intptr_t)i,
-						    ImGuiTreeNodeFlags_Leaf |
-						        ImGuiTreeNodeFlags_NoTreePushOnOpen,
-						    "%s", entry.path().filename().string().c_str());
+						    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
+						    entry.path().filename().string().c_str());
 					}
 					i++;
 				}
@@ -70,8 +66,7 @@ namespace StrawPen
 				ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
 
 				int i = 0;
-				for (const auto& entry :
-				     std::filesystem::directory_iterator(m_project_path))
+				for (const auto& entry : std::filesystem::directory_iterator(m_project_path))
 				{
 					if (entry.is_directory())
 					{
@@ -81,9 +76,8 @@ namespace StrawPen
 					{
 						ImGui::TreeNodeEx(
 						    (void*)(intptr_t)i,
-						    ImGuiTreeNodeFlags_Leaf |
-						        ImGuiTreeNodeFlags_NoTreePushOnOpen,
-						    "%s", entry.path().filename().string().c_str());
+						    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
+						    entry.path().filename().string().c_str());
 					}
 					i++;
 				}
@@ -93,10 +87,7 @@ namespace StrawPen
 			ImGui::End();
 		}
 
-		std::string getCurrentDirectory() const
-		{
-			return m_project_path.string();
-		}
+		std::filesystem::path getCurrentDirectory() const { return m_project_path; }
 
 	private:
 		std::filesystem::path m_project_path;

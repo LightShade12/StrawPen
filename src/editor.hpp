@@ -18,7 +18,7 @@ namespace StrawPen
 	{
 	public:
 		EditorLayer()
-		    : m_explorer(std::filesystem::current_path().string().c_str()),
+		    : m_explorer(std::filesystem::current_path()),
 		      m_source(std::filesystem::current_path()) {};
 		~EditorLayer() override = default;
 
@@ -76,7 +76,7 @@ namespace StrawPen
 			if (glfwGetKeyScancode(GLFW_KEY_S) == scancode && (action == GLFW_PRESS) &&
 			    (mods & GLFW_MOD_CONTROL))
 			{
-				m_source.writeToFile(m_explorer.getCurrentDirectory().c_str());
+				m_source.saveFile();
 			}
 		}
 
