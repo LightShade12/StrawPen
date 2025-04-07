@@ -15,7 +15,7 @@ namespace StrawPen
 	class DirectoryExplorer
 	{
 	public:
-		explicit DirectoryExplorer(std::filesystem::path working_dir) : m_project_path(working_dir)
+		explicit DirectoryExplorer(std::filesystem::path working_dir) : m_working_dir(working_dir)
 		{
 			refreshDir();
 		};
@@ -23,11 +23,11 @@ namespace StrawPen
 		void refreshDir()
 		{
 			int curr_lv_dir_items = 0;
-			for (const auto& entry : std::filesystem::directory_iterator(m_project_path))
+			for (const auto& entry : std::filesystem::directory_iterator(m_working_dir))
 			{
 				curr_lv_dir_items++;
 			}
-			m_dir_items = curr_lv_dir_items;
+			m_root_dir_items = curr_lv_dir_items;
 		}
 
 		void requestFileLoad(const std::filesystem::path& filepath)
@@ -75,13 +75,13 @@ namespace StrawPen
 			ImGui::Begin("Directory");
 			{
 				// root
-				if (ImGui::TreeNode(m_project_path.filename().string().c_str()))
+				if (ImGui::TreeNode(m_working_dir.filename().string().c_str()))
 				{
 					ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
 
 					// listing
 					int idx = 0;
-					for (const auto& entry : std::filesystem::directory_iterator(m_project_path))
+					for (const auto& entry : std::filesystem::directory_iterator(m_working_dir))
 					{
 						if (entry.is_directory())
 						{
@@ -109,11 +109,11 @@ namespace StrawPen
 			ImGui::End();
 		}
 
-		std::filesystem::path getCurrentDirectory() const { return m_project_path; }
+		std::filesystem::path getCurrentDirectory() const { return m_working_dir; }
 
 	private:
-		std::filesystem::path m_project_path;
-		int32_t m_dir_items = 0;
+		std::filesystem::path m_working_dir;
+		int32_t m_root_dir_items = 0;
 
 	};  // DirectoryExplorer
 

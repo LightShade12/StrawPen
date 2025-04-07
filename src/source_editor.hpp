@@ -183,7 +183,7 @@ namespace StrawPen
 
 	private:
 		int m_current_file_index = 0;
-		std::vector<std::pair<SourceFile, bool>> m_loadedfiles;
+		std::vector<std::pair<SourceFile, bool>> m_loadedfiles;  // TODO: use map?
 		std::filesystem::path m_working_dir;
 	};  // SourceEditor
 
