@@ -4,6 +4,8 @@
 #pragma once
 
 #include "imgui.h"
+#include "spdlog/spdlog.h"
+
 // ======================
 #include <filesystem>
 
@@ -28,18 +30,23 @@ namespace StrawPen
 			m_dir_items = curr_lv_dir_items;
 		}
 
-		bool drawDirectory(const std::filesystem::path& dir_path)
+		void requestFileLoad(const std::filesystem::path& filepath)
+		{
+			spdlog::info("requesting file load {}", filepath.string().c_str());
+		}
+
+		bool recurseRenderDirectory(const std::filesystem::path& dir_path)
 		{
 			// dir folder
 			if (ImGui::TreeNode(dir_path.filename().string().c_str()))
 			{
-				// ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
+				// listing
 				int i = 0;
 				for (const auto& entry : std::filesystem::directory_iterator(dir_path))
 				{
 					if (entry.is_directory())
 					{
-						drawDirectory(entry.path());
+						recurseRenderDirectory(entry.path());
 					}
 					else
 					{
@@ -48,42 +55,57 @@ namespace StrawPen
 						    (void*)(intptr_t)i,
 						    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
 						    entry.path().filename().string().c_str());
+						if (ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0))
+						{
+							// spdlog::info("rcrs clicked {}", entry.path().string().c_str());
+							requestFileLoad(entry.path());
+						}
 					}
 					i++;
 				}
+				// end dir listing
 				ImGui::TreePop();
 				return true;
 			}
-			return false;
+			return false;  // folder not opened
 		}
 
 		void render()
 		{
 			ImGui::Begin("Directory");
-
-			if (ImGui::TreeNode(m_project_path.filename().string().c_str()))
 			{
-				ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
-
-				int i = 0;
-				for (const auto& entry : std::filesystem::directory_iterator(m_project_path))
+				// root
+				if (ImGui::TreeNode(m_project_path.filename().string().c_str()))
 				{
-					if (entry.is_directory())
-					{
-						drawDirectory(entry.path());
-					}
-					else
-					{
-						ImGui::TreeNodeEx(
-						    (void*)(intptr_t)i,
-						    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
-						    entry.path().filename().string().c_str());
-					}
-					i++;
-				}
-				ImGui::TreePop();
-			}
+					ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
 
+					// listing
+					int idx = 0;
+					for (const auto& entry : std::filesystem::directory_iterator(m_project_path))
+					{
+						if (entry.is_directory())
+						{
+							recurseRenderDirectory(entry.path());
+						}
+						else
+						{
+							// file object
+							ImGui::TreeNodeEx(
+							    (void*)(intptr_t)idx,
+							    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
+							    entry.path().filename().string().c_str());
+							if (ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0))
+							{
+								// spdlog::info("clicked {}", entry.path().string().c_str());
+								requestFileLoad(entry.path());
+							}
+						}
+						idx++;
+					}
+					// end root listing
+					ImGui::TreePop();
+				}
+			}
 			ImGui::End();
 		}
 

@@ -15,6 +15,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace StrawPen
@@ -99,21 +100,30 @@ namespace StrawPen
 	public:
 		explicit SourceEditor(std::filesystem::path file_path) : m_working_dir(file_path)
 		{
-			m_loadedfiles.emplace_back(file_path.append("unnamed"));
+			{
+				std::filesystem::path path = file_path;
+				m_loadedfiles.emplace_back(path.append("unnamed1"), true);
+			}
+			{
+				std::filesystem::path path = file_path;
+				m_loadedfiles.emplace_back(path.append("unnamed2"), true);
+			}
+			{
+				std::filesystem::path path = file_path;
+				m_loadedfiles.emplace_back(path.append("unnamed3"), true);
+			}
 			m_current_file_index = 0;
 		};
 
-		void saveFile() { m_loadedfiles[m_current_file_index].writeToFile(); }
+		void saveFile() { m_loadedfiles[m_current_file_index].first.writeToFile(); }
 
 		void render()
 		{
 			ImGui::Begin("Source Editor");
 			{
-				static bool is_f1open = true;
-
 				if (ImGui::Button("Save"))
 				{
-					m_loadedfiles[m_current_file_index].writeToFile();
+					m_loadedfiles[m_current_file_index].first.writeToFile();
 				}
 				ImGui::SameLine();
 
@@ -129,30 +139,39 @@ namespace StrawPen
 
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
 				                        ImGui::CalcTextSize(":File Name	").x);
-				ImGui::InputTextWithHint(":File Name", "main.cxx",
-				                         m_loadedfiles[m_current_file_index].getFileNamePtr());
+
+				static std::string filenameinput;
+				if (ImGui::InputTextWithHint(":File Name", "main.cxx", &filenameinput,
+				                             ImGuiInputTextFlags_EnterReturnsTrue))
+				{
+					*(m_loadedfiles[m_current_file_index].first.getFileNamePtr()) =
+					    filenameinput;  // TODO: setter
+				}
 
 				// ================
 				ImGui::BeginChild("filetabsys");
 				{
 					if (ImGui::BeginTabBar("filetabs", ImGuiTabBarFlags_None))
 					{
-						if (ImGui::BeginTabItem(
-						        m_loadedfiles[m_current_file_index].getFileName().c_str(),
-						        &is_f1open))
+						for (int i = 0; i < m_loadedfiles.size(); i++)
 						{
-							ImGui::Text("%s",
-							            m_loadedfiles[m_current_file_index]
-							                .getFullPath()
-							                .string()
-							                .c_str());  // FILEPATH
+							if (m_loadedfiles[i].second &&
+							    ImGui::BeginTabItem(m_loadedfiles[i].first.getFileName().c_str(),
+							                        &m_loadedfiles[i].second))
+							{
+								m_current_file_index = i;
+								ImGui::Text("%s", m_loadedfiles[m_current_file_index]
+								                      .first.getFullPath()
+								                      .string()
+								                      .c_str());  // FILEPATH
 
-							ImGui::InputTextMultiline(
-							    "###srctextinput",
-							    m_loadedfiles[m_current_file_index].getCharBufferPtr(),
-							    ImGui::GetContentRegionAvail());
+								ImGui::InputTextMultiline(
+								    "###srctextinput",
+								    m_loadedfiles[m_current_file_index].first.getCharBufferPtr(),
+								    ImGui::GetContentRegionAvail());
 
-							ImGui::EndTabItem();
+								ImGui::EndTabItem();
+							}
 						}
 						ImGui::EndTabBar();
 					}
@@ -164,7 +183,7 @@ namespace StrawPen
 
 	private:
 		int m_current_file_index = 0;
-		std::vector<SourceFile> m_loadedfiles;
+		std::vector<std::pair<SourceFile, bool>> m_loadedfiles;
 		std::filesystem::path m_working_dir;
 	};  // SourceEditor
 
