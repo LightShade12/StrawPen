@@ -15,6 +15,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -86,6 +87,8 @@ namespace StrawPen
 			return fullfilepath;
 		}
 
+		void setFileName(const std::string& filename) { m_filename = filename; }
+
 		std::string getFileName() const { return m_filename; }
 		std::string* getFileNamePtr() { return &m_filename; }
 
@@ -98,42 +101,77 @@ namespace StrawPen
 		std::string m_dir_path = "./";
 		std::string m_source_char_buffer;
 	};  // SourceFile
+}  // namespace StrawPen
+
+namespace std
+{
+	template <>
+	struct hash<StrawPen::SourceFile>
+	{
+		size_t operator()(const StrawPen::SourceFile& file) const
+		{
+			size_t h1 = std::hash<std::string> {}(file.getFileName());
+			size_t h2 = std::hash<std::string> {}(file.getDirPath());
+			return h1 ^ (h2 << 1);
+		}
+	};  // hash<StrawPen::SourceFile>
+
+}  // namespace std
+
+namespace StrawPen
+{
+	struct SourceFileHasher
+	{
+		size_t operator()(const SourceFile& file) const { return std::hash<SourceFile> {}(file); }
+	};  // SourceFileHasher
+
+	struct SourceFileEquality
+	{
+		bool operator()(const SourceFile& a, const SourceFile& b) const { return a == b; }
+	};  // SourceFileEquality
+
+	class LoadedFileRecord
+	{
+	public:
+		LoadedFileRecord() = default;
+
+	private:
+		std::vector<std::pair<SourceFile, bool>> m_loadedfiles;
+		std::unordered_set<SourceFile, SourceFileHasher, SourceFileEquality> m_load_record;
+	};
 
 	class SourceEditor
 	{
 	public:
-		explicit SourceEditor(std::filesystem::path file_path)
-		    : m_working_dir(file_path) {
-			      // std::filesystem::path path = file_path;
-			      //  m_loadedfiles.emplace_back(path.append("unnamed1"), true);
-
-			      // {
-			      // 	std::filesystem::path path = file_path;
-			      // 	m_loadedfiles.emplace_back(path.append("unnamed2"), true);
-			      // }
-			      // {
-			      // 	std::filesystem::path path = file_path;
-			      // 	m_loadedfiles.emplace_back(path.append("unnamed3"), true);
-			      // }
-			      // m_current_file_index = 0;
-		      };
+		explicit SourceEditor(std::filesystem::path file_path) : m_working_dir(file_path) {};
 
 		// TODO: reload file
-		// TODO: reuse loaded file; requires find()
 		void loadFile(std::filesystem::path filepath)
 		{
 			if (!filepath.has_filename())
 			{
-				spdlog::error("invalid file load path");
+				spdlog::error("No file name in path");
 				return;
 			}
-			m_loadedfiles.emplace_back(SourceFile::loadFromFile(filepath), true);
+			const SourceFile& file_load = SourceFile::loadFromFile(filepath);
+			if (m_load_record.find(file_load) != m_load_record.end())
+			{
+				spdlog::info("File already loaded");
+				return;
+			}
+			addFileToLoaded(file_load);
 			m_current_file_index = m_loadedfiles.size() - 1;  // TODO: narrowing concersion
 		}
 
-		void createFile(std::filesystem::path path)
+		void createFile(std::filesystem::path filepath)
 		{
-			m_loadedfiles.emplace_back(SourceFile(path), true);
+			const SourceFile& newfile = SourceFile(filepath);
+			// if (m_load_record.find(newfile) != m_load_record.end())
+			// {
+			// 	spdlog::info("File already exists");
+			// 	return;
+			// }
+			addFileToLoaded(newfile);
 			m_current_file_index = m_loadedfiles.size() - 1;  // TODO: narrowing concersion
 		}
 
@@ -145,7 +183,7 @@ namespace StrawPen
 			{
 				if (ImGui::Button("Save"))
 				{
-					m_loadedfiles[m_current_file_index].first.writeToFile();
+					saveFile();
 				}
 				ImGui::SameLine();
 
@@ -162,15 +200,14 @@ namespace StrawPen
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
 				                        ImGui::CalcTextSize(":File Name	").x);
 
-				static std::string filenameinput;
-				if (ImGui::InputTextWithHint(":File Name", "main.cxx", &filenameinput,
+				if (ImGui::InputTextWithHint(":File Name", "main.cxx", &m_filename_input_buff,
 				                             ImGuiInputTextFlags_EnterReturnsTrue))
 				{
-					*(m_loadedfiles[m_current_file_index].first.getFileNamePtr()) =
-					    filenameinput;  // TODO: setter
+					m_loadedfiles[m_current_file_index].first.setFileName(m_filename_input_buff);
 				}
 
-				// ================
+				// =================================================================
+
 				ImGui::BeginChild("filetabsys");
 				{
 					if (ImGui::BeginTabBar("filetabs", ImGuiTabBarFlags_None))
@@ -182,6 +219,7 @@ namespace StrawPen
 							if (file.second &&
 							    ImGui::BeginTabItem(file.first.getFileName().c_str(), &file.second))
 							{
+								m_filename_input_buff = file.first.getFileName();
 								m_current_file_index = i;
 								ImGui::Text("%s",
 								            file.first.getFullPath().string().c_str());  // FILEPATH
@@ -195,6 +233,7 @@ namespace StrawPen
 							ImGui::PopID();
 							if (!file.second)
 							{
+								m_load_record.erase(file.first);
 								m_loadedfiles.erase(m_loadedfiles.begin() + i);
 							}
 						}
@@ -204,12 +243,22 @@ namespace StrawPen
 				ImGui::EndChild();
 			}
 			ImGui::End();
-			spdlog::info("loaded files:{}", m_loadedfiles.size());
+			spdlog::info("loaded files:{}", m_load_record.size());
 		}
 
 	private:
+		void addFileToLoaded(const SourceFile& file)
+		{
+			m_loadedfiles.emplace_back(file, true);
+			m_load_record.emplace(file);
+		}
+
+		std::string m_filename_input_buff;
 		int m_current_file_index = 0;
-		std::vector<std::pair<SourceFile, bool>> m_loadedfiles;  // TODO: use map?
+
+		std::vector<std::pair<SourceFile, bool>> m_loadedfiles;
+		std::unordered_set<SourceFile, SourceFileHasher, SourceFileEquality> m_load_record;
+
 		std::filesystem::path m_working_dir;
 	};  // SourceEditor
 
