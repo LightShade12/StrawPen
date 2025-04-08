@@ -58,11 +58,15 @@ namespace StrawPen
 		{
 			SourceFile src_file(file_path);
 			std::ifstream in_file(file_path, std::ios::binary | std::ios::ate);
+
 			if (!in_file)
 			{
 				throw std::runtime_error("file load error");
 			}
 			const size_t source_char_len = in_file.tellg();
+
+			in_file.seekg(0, std::ios::beg);
+
 			src_file.m_source_char_buffer.resize(source_char_len);
 			in_file.read(src_file.m_source_char_buffer.data(),
 			             source_char_len);  // TODO: fix narrowing conversion
@@ -98,22 +102,40 @@ namespace StrawPen
 	class SourceEditor
 	{
 	public:
-		explicit SourceEditor(std::filesystem::path file_path) : m_working_dir(file_path)
+		explicit SourceEditor(std::filesystem::path file_path)
+		    : m_working_dir(file_path) {
+			      // std::filesystem::path path = file_path;
+			      //  m_loadedfiles.emplace_back(path.append("unnamed1"), true);
+
+			      // {
+			      // 	std::filesystem::path path = file_path;
+			      // 	m_loadedfiles.emplace_back(path.append("unnamed2"), true);
+			      // }
+			      // {
+			      // 	std::filesystem::path path = file_path;
+			      // 	m_loadedfiles.emplace_back(path.append("unnamed3"), true);
+			      // }
+			      // m_current_file_index = 0;
+		      };
+
+		// TODO: reload file
+		// TODO: reuse loaded file; requires find()
+		void loadFile(std::filesystem::path filepath)
 		{
+			if (!filepath.has_filename())
 			{
-				std::filesystem::path path = file_path;
-				m_loadedfiles.emplace_back(path.append("unnamed1"), true);
+				spdlog::error("invalid file load path");
+				return;
 			}
-			{
-				std::filesystem::path path = file_path;
-				m_loadedfiles.emplace_back(path.append("unnamed2"), true);
-			}
-			{
-				std::filesystem::path path = file_path;
-				m_loadedfiles.emplace_back(path.append("unnamed3"), true);
-			}
-			m_current_file_index = 0;
-		};
+			m_loadedfiles.emplace_back(SourceFile::loadFromFile(filepath), true);
+			m_current_file_index = m_loadedfiles.size() - 1;  // TODO: narrowing concersion
+		}
+
+		void createFile(std::filesystem::path path)
+		{
+			m_loadedfiles.emplace_back(SourceFile(path), true);
+			m_current_file_index = m_loadedfiles.size() - 1;  // TODO: narrowing concersion
+		}
 
 		void saveFile() { m_loadedfiles[m_current_file_index].first.writeToFile(); }
 
@@ -155,22 +177,25 @@ namespace StrawPen
 					{
 						for (int i = 0; i < m_loadedfiles.size(); i++)
 						{
-							if (m_loadedfiles[i].second &&
-							    ImGui::BeginTabItem(m_loadedfiles[i].first.getFileName().c_str(),
-							                        &m_loadedfiles[i].second))
+							ImGui::PushID(i);
+							auto& file = m_loadedfiles[i];
+							if (file.second &&
+							    ImGui::BeginTabItem(file.first.getFileName().c_str(), &file.second))
 							{
 								m_current_file_index = i;
-								ImGui::Text("%s", m_loadedfiles[m_current_file_index]
-								                      .first.getFullPath()
-								                      .string()
-								                      .c_str());  // FILEPATH
+								ImGui::Text("%s",
+								            file.first.getFullPath().string().c_str());  // FILEPATH
 
-								ImGui::InputTextMultiline(
-								    "###srctextinput",
-								    m_loadedfiles[m_current_file_index].first.getCharBufferPtr(),
-								    ImGui::GetContentRegionAvail());
+								ImGui::InputTextMultiline("###srctextinput",
+								                          file.first.getCharBufferPtr(),
+								                          ImGui::GetContentRegionAvail());
 
 								ImGui::EndTabItem();
+							}
+							ImGui::PopID();
+							if (!file.second)
+							{
+								m_loadedfiles.erase(m_loadedfiles.begin() + i);
 							}
 						}
 						ImGui::EndTabBar();
@@ -179,6 +204,7 @@ namespace StrawPen
 				ImGui::EndChild();
 			}
 			ImGui::End();
+			spdlog::info("loaded files:{}", m_loadedfiles.size());
 		}
 
 	private:

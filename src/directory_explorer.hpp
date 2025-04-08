@@ -3,6 +3,9 @@
  **************************************************************************************************************************/
 #pragma once
 
+#include "mediator_system.hpp"
+
+// ======================
 #include "imgui.h"
 #include "spdlog/spdlog.h"
 
@@ -12,13 +15,16 @@
 namespace StrawPen
 {
 
-	class DirectoryExplorer
+	class DirectoryExplorer : public Component
 	{
 	public:
-		explicit DirectoryExplorer(std::filesystem::path working_dir) : m_working_dir(working_dir)
+		explicit DirectoryExplorer(Mediator* mediator, std::filesystem::path working_dir)
+		    : m_working_dir(working_dir), Component(mediator)
 		{
 			refreshDir();
 		};
+
+		~DirectoryExplorer() override = default;
 
 		void refreshDir()
 		{
@@ -32,7 +38,9 @@ namespace StrawPen
 
 		void requestFileLoad(const std::filesystem::path& filepath)
 		{
-			spdlog::info("requesting file load {}", filepath.string().c_str());
+			m_selected_filepath = filepath;
+			spdlog::info("requesting file load {}", m_selected_filepath.string().c_str());
+			m_mediator->notify(this, "load_file");
 		}
 
 		bool recurseRenderDirectory(const std::filesystem::path& dir_path)
@@ -74,6 +82,21 @@ namespace StrawPen
 		{
 			ImGui::Begin("Directory");
 			{
+				if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(1))
+				{
+					ImGui::OpenPopup("dir_ctx");
+				}
+				if (ImGui::BeginPopup("dir_ctx"))
+				{
+					if (ImGui::Button("Add file"))
+					{
+						m_mediator->notify(this, "create_file");
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::EndPopup();
+				}
+
 				// root
 				if (ImGui::TreeNode(m_working_dir.filename().string().c_str()))
 				{
@@ -110,9 +133,11 @@ namespace StrawPen
 		}
 
 		std::filesystem::path getCurrentDirectory() const { return m_working_dir; }
+		std::filesystem::path getSelectedFilePath() const { return m_selected_filepath; }
 
 	private:
 		std::filesystem::path m_working_dir;
+		std::filesystem::path m_selected_filepath;
 		int32_t m_root_dir_items = 0;
 
 	};  // DirectoryExplorer

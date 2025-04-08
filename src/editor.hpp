@@ -2,23 +2,25 @@
  * editor.hpp
  **************************************************************************************************************************/
 #pragma once
-
 #include "directory_explorer.hpp"
+#include "mediator_system.hpp"
 #include "source_editor.hpp"
 // ====================
+
 #include "strawplate/strawplate.hpp"
 // ====================
+
 #include <filesystem>
 #include <string>
 
 namespace StrawPen
 {
 
-	class EditorLayer : public StrawPlate::StrawPlateLayer
+	class EditorLayer : public StrawPlate::StrawPlateLayer, public Mediator
 	{
 	public:
 		EditorLayer()
-		    : m_explorer(std::filesystem::current_path()),
+		    : m_explorer(this, std::filesystem::current_path()),
 		      m_source(std::filesystem::current_path()) {};
 		~EditorLayer() override = default;
 
@@ -27,6 +29,25 @@ namespace StrawPen
 
 		EditorLayer& operator=(const EditorLayer& other) = default;
 		EditorLayer& operator=(EditorLayer&& other) = default;
+
+		void notify(Component* sender, std::string event) override
+		{
+			if (DirectoryExplorer* direxp = dynamic_cast<DirectoryExplorer*>(sender);
+			    direxp != nullptr)
+			{
+				if (event == "load_file")
+				{
+					m_source.loadFile(direxp->getSelectedFilePath());
+					spdlog::info("Handled load_file");
+				}
+				if (event == "create_file")
+				{
+					auto path = direxp->getCurrentDirectory();
+					m_source.createFile(path.append("unnamed"));
+					spdlog::info("Handled create_file");
+				}
+			}
+		}
 
 		void onAttach() override {}
 
