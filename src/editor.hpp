@@ -1,17 +1,21 @@
 /***************************************************************************************************************************
  * editor.hpp
+ * 05-04-2025
  **************************************************************************************************************************/
+
 #pragma once
+
 #include "directory_explorer.hpp"
 #include "mediator_system.hpp"
 #include "source_editor.hpp"
-// ====================
+// ========================
 
 #include "strawplate/strawplate.hpp"
-// ====================
+// =========================
 
 #include <filesystem>
 #include <string>
+// ========================
 
 namespace StrawPen
 {
@@ -42,7 +46,7 @@ namespace StrawPen
 				}
 				if (event == "create_file")
 				{
-					auto path = direxp->getCurrentDirectory();
+					auto path = direxp->getWorkingDirectory();
 					m_source.createFile(path.append("unnamed"));
 					spdlog::info("Handled create_file");
 				}

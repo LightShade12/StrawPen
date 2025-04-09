@@ -1,13 +1,27 @@
-#include "editor.hpp"
+/***********************************************************************************************************************************
+ * main.cpp
+ * 05-04-2025
+ **********************************************************************************************************************************/
 
+#include "editor.hpp"
+#include "strawplate/strawplate.hpp"
 // ======================
+
+#include <cstdio>
 #include <cstdlib>
-#include <iostream>
+#include <exception>
 #include <memory>
-#include <stdexcept>
+// ======================
 
 int main(int argc, char* argv[])
 {
+#ifdef DEBUG_BUILD
+	printf("THIS IS A DEBUG BUILD\n");
+#endif
+#ifdef NDEBUG
+	printf("THIS IS A NON-DEBUG BUILD\n");
+#endif
+
 	try
 	{
 		StrawPlate::WindowSettings win_settings;
@@ -16,8 +30,7 @@ int main(int argc, char* argv[])
 		win_settings.height = 1080 * 0.5;
 
 		std::shared_ptr<StrawPlate::LayerMaker> layer_factory =
-		    std::make_shared<
-		        StrawPlate::ConcreteLayerMaker<StrawPen::EditorLayer>>();
+		    std::make_shared<StrawPlate::ConcreteLayerMaker<StrawPen::EditorLayer>>();
 
 		StrawPlate::GLFWApplication app(win_settings, layer_factory);
 		app.run();

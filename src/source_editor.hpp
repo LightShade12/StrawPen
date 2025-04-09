@@ -3,6 +3,7 @@
  * 06-04-2025
  * sorry. I am retarded.
  **************************************************************************************************************************/
+
 #pragma once
 
 #include "imgui.h"
@@ -128,7 +129,8 @@ namespace StrawPen
 				ImGui::EndChild();
 			}
 			ImGui::End();
-			spdlog::info("loaded files:{}", m_loadedfiles.getSize());
+
+			// spdlog::info("loaded files:{}", m_loadedfiles.getSize());
 		}
 
 	private:
