@@ -42,13 +42,13 @@ namespace StrawPen
 				if (event == "load_file")
 				{
 					m_source.loadFile(direxp->getSelectedFilePath());
-					spdlog::info("Handled load_file");
+					spdlog::debug("Handled load_file");
 				}
 				if (event == "create_file")
 				{
 					auto path = direxp->getWorkingDirectory();
 					m_source.createFile(path.append("unnamed"));
-					spdlog::info("Handled create_file");
+					spdlog::debug("Handled create_file");
 				}
 			}
 		}

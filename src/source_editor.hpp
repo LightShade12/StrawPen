@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "imgui.h"
 #include "imgui_stdlib.h"
 #include "spdlog/spdlog.h"
 // ==========================
@@ -25,7 +24,6 @@ namespace StrawPen
 	public:
 		explicit SourceEditor(std::filesystem::path file_path) : m_working_dir(file_path) {};
 
-		// TODO: reload file
 		void loadFile(std::filesystem::path filepath)
 		{
 			if (!filepath.has_filename())
@@ -36,7 +34,7 @@ namespace StrawPen
 			const SourceFile& file_load = SourceFile::loadFromFile(filepath);
 			if (m_loadedfiles.fileExists(file_load))
 			{
-				spdlog::info("File already loaded");
+				spdlog::debug("File already loaded");
 				return;
 			}
 			m_loadedfiles.add(file_load);
@@ -130,7 +128,7 @@ namespace StrawPen
 			}
 			ImGui::End();
 
-			// spdlog::info("loaded files:{}", m_loadedfiles.getSize());
+			// spdlog::debug("loaded files:{}", m_loadedfiles.getSize());
 		}
 
 	private:

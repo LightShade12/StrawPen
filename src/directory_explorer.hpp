@@ -9,6 +9,7 @@
 // ======================
 
 #include "imgui.h"
+#include "imgui_stdlib.h"
 #include "spdlog/spdlog.h"
 // ======================
 
@@ -49,22 +50,61 @@ namespace StrawPen
 					ImGui::EndPopup();
 				}
 
+				static std::pair<bool, std::filesystem::path> file_ctx_data =
+				    std::make_pair(false, "");  // TODO: rename var; make it into member field
+				file_ctx_data.first = false;
+
+				static std::string rename_input;
+
 				// file ctx popup menu
 				if (ImGui::BeginPopup("file_ctx"))
 				{
 					if (ImGui::Button("rename file"))
 					{
-						ImGui::CloseCurrentPopup();
+						rename_input = "";
+						ImGui::OpenPopup("rename_dialog");
 					};
+					// rename dialog
+					if (ImGui::BeginPopup("rename_dialog"))
+					{
+						ImGui::Text("Rename");
+						if (ImGui::InputTextWithHint("###renamefield", "new name", &rename_input,
+						                             ImGuiInputTextFlags_EnterReturnsTrue))
+						{
+							std::filesystem::path new_file =
+							    file_ctx_data.second.parent_path().append(rename_input);
+							spdlog::debug("renaming src: {} to {}",
+							              file_ctx_data.second.string().c_str(),
+							              new_file.string().c_str());
+							try
+							{
+								std::filesystem::rename(file_ctx_data.second, new_file);
+							}
+							catch (const std::exception& e)
+							{
+								spdlog::error("EXCEPTION CAUGHT: {}", e.what());
+							}
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::EndPopup();
+					}
+
 					if (ImGui::Button("delete file"))
 					{
+						if (std::filesystem::remove(file_ctx_data.second))
+						{
+							spdlog::debug("deleted file: {}",
+							              file_ctx_data.second.string().c_str());
+						}
+						else
+						{
+							spdlog::debug("delete FAILED: {}",
+							              file_ctx_data.second.string().c_str());
+						}
 						ImGui::CloseCurrentPopup();
 					};
 					ImGui::EndPopup();
 				}
-
-				std::pair<bool, std::filesystem::path> open_file_ctx_menu =
-				    std::make_pair(false, "");
 
 				// root cwd listing
 				if (ImGui::TreeNode(m_working_dir.filename().string().c_str()))
@@ -77,7 +117,7 @@ namespace StrawPen
 					{
 						if (entry.is_directory())
 						{
-							recurseRenderDirectory(entry.path(), &open_file_ctx_menu);
+							recurseRenderDirectory(entry.path(), &file_ctx_data);
 						}
 						else
 						{
@@ -87,7 +127,7 @@ namespace StrawPen
 							    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
 							    entry.path().filename().string().c_str());
 
-							processFileClicks(entry.path(), &open_file_ctx_menu);
+							processFileClicks(entry.path(), &file_ctx_data);
 						}
 						idx++;
 					}
@@ -97,9 +137,9 @@ namespace StrawPen
 
 				// popups launch ==============================
 
-				if (open_file_ctx_menu.first)
+				if (file_ctx_data.first)
 				{
-					spdlog::info("file ctx for {}", open_file_ctx_menu.second.string().c_str());
+					spdlog::debug("file ctx for {}", file_ctx_data.second.string().c_str());
 					ImGui::OpenPopup("file_ctx");
 				}
 				else if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(1))
@@ -138,7 +178,7 @@ namespace StrawPen
 				else if (ImGui::IsMouseClicked(0))
 				{
 					// select file
-					spdlog::info("file selected {}", filepath.string().c_str());
+					spdlog::debug("file selected {}", filepath.string().c_str());
 				}
 			}
 		}
@@ -146,7 +186,7 @@ namespace StrawPen
 		void requestFileLoad(const std::filesystem::path& filepath)
 		{
 			m_selected_filepath = filepath;
-			spdlog::info("requesting file load {}", m_selected_filepath.string().c_str());
+			spdlog::debug("requesting file load {}", m_selected_filepath.string().c_str());
 			m_mediator->notify(this, "load_file");
 		}
 
