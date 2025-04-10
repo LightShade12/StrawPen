@@ -48,7 +48,7 @@ target_sources(strawpen PRIVATE ${MYSOURCES})
 
 #--------- Icons -----------
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-    # target_sources(strawpen PRIVATE src/icon.rc)
+    target_sources(strawpen PRIVATE src/icon.rc)
 endif()
 
 #--------- Dependencies -----------

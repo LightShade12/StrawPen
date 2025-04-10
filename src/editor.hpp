@@ -8,6 +8,7 @@
 #include "directory_explorer.hpp"
 #include "mediator_system.hpp"
 #include "source_editor.hpp"
+#include "theme.hpp"
 // ========================
 
 #include "strawplate/strawplate.hpp"
@@ -53,12 +54,18 @@ namespace StrawPen
 			}
 		}
 
-		void onAttach() override {}
+		void onAttach() override { m_custom_font = ImGuiThemes::Dark(); }
 
 		void onDetach() override {}
 
 		void onRender(float timestep_secs) override
 		{
+			if (m_custom_font)
+			{
+				ImGui::PushFont(m_custom_font);
+			}
+			// ================================================
+
 			ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(),
 			                             ImGuiDockNodeFlags_PassthruCentralNode);
 			{
@@ -90,10 +97,17 @@ namespace StrawPen
 
 			m_explorer.render();
 
-			ImGui::ShowDemoWindow();
-
 			ImGui::Begin("Output");
 			ImGui::End();
+
+			ImGui::ShowDemoWindow();
+
+			// ================================================
+
+			if (m_custom_font)
+			{
+				ImGui::PopFont();
+			}
 		}
 
 		void onInput(int key, int scancode, int action, int mods) override
@@ -108,7 +122,7 @@ namespace StrawPen
 	private:
 		SourceEditor m_source;
 		DirectoryExplorer m_explorer;
-
+		ImFont* m_custom_font = nullptr;
 	};  // EditorLayer
 
 }  // namespace StrawPen

@@ -34,7 +34,8 @@ int main(int argc, char* argv[])
 #endif
 		win_settings.width = 1920 * 0.5;
 		win_settings.height = 1080 * 0.5;
-
+		win_settings.icon_filepath = "./assets/icons/icon.png";
+		win_settings.gui_settings.font_ttf_filepath = "./assets/fonts/JetBrainsMono-Regular.ttf";
 		const std::shared_ptr<StrawPlate::LayerMaker> layer_factory =
 		    std::make_shared<StrawPlate::ConcreteLayerMaker<StrawPen::EditorLayer>>();
 
