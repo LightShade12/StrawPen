@@ -110,7 +110,6 @@ namespace StrawPen
 				if (ImGui::InputTextWithHint(":File Name", "main.cxx", &m_filename_input_buff,
 				                             ImGuiInputTextFlags_EnterReturnsTrue))
 				{
-					// m_loadedfiles[m_current_file_index].first.rename(m_filename_input_buff);
 					m_loadedfiles.renameFile(m_current_file_index, m_filename_input_buff);
 				}
 

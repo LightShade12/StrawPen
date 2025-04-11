@@ -7,19 +7,20 @@
 #include "strawplate/strawplate.hpp"
 // ======================
 
-#include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <iostream>
 #include <memory>
+
 // ======================
 
 int main(int argc, char* argv[])
 {
 #ifdef DEBUG_BUILD
-	printf("[THIS IS A DEBUG BUILD]\n\n");
+	std::cout << "[THIS IS A DEBUG BUILD]\n\n";
 #endif
 #ifdef NDEBUG
-	printf("[THIS IS A NON-DEBUG BUILD]\n\n");
+	std::cout << "[THIS IS A NON-DEBUG BUILD]\n\n";
 #endif
 
 	try

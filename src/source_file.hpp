@@ -19,14 +19,13 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
 //========================
 
 namespace StrawPen
 {
 
 	/***
-	 * @brief An object associating text content with a filepath
+	 * @brief An handle object associating text string content with a filepath
 	 */
 	class ASCIITextFile
 	{
@@ -36,33 +35,37 @@ namespace StrawPen
 		      m_dir_path(filepath.parent_path().string()) {};
 
 		/// @brief Instantiate from existing filepath
-		/// @param file_path
+		/// @param file_path file path
 		/// @return loaded SourceFile
 		static ASCIITextFile loadFromDisk(const std::filesystem::path& file_path)
 		{
 			ASCIITextFile loaded_file(file_path);
+			if (!loaded_file.existsOnDisk())
+			{
+				throw std::runtime_error("[LOAD] file does not exist on disk");
+			}
+
 			std::ifstream in_file_strm;
 			in_file_strm.open(file_path, std::ios::binary | std::ios::ate | std::ios::in);
 			if (!in_file_strm.is_open())
 			{
-				throw std::runtime_error("file open error");
+				throw std::runtime_error("[LOAD] file stream open error");
 			}
-			const size_t source_char_len = in_file_strm.tellg();
-			in_file_strm.seekg(0, std::ios::beg);
 
+			const size_t source_char_len = in_file_strm.tellg();
 			if (const size_t max_size = std::numeric_limits<std::streamsize>::max();
 			    source_char_len > max_size)
 			{
-				throw new std::runtime_error("file content too long for reading");
+				throw std::runtime_error("[LOAD] file content too long for reading");
 			}
-
 			loaded_file.m_source_string.resize(source_char_len);
+
+			in_file_strm.seekg(0, std::ios::beg);
 			in_file_strm.read(loaded_file.m_source_string.data(),
 			                  static_cast<std::streamsize>(source_char_len));
-
 			if (in_file_strm.fail())
 			{
-				throw std::runtime_error("file reading error");
+				throw std::runtime_error("[LOAD] file reading error");
 			}
 
 			return loaded_file;
@@ -77,20 +80,29 @@ namespace StrawPen
 		{
 			if (m_filename.empty() || m_dir_path.empty())
 			{
-				spdlog::error("{}:{}:[WRITE] empty path", __FILE__, __LINE__);
-				throw std::runtime_error("empty path");
+				spdlog::error("{}:{}:[WRITE] empty path/name", __FILE__, __LINE__);
+				throw std::runtime_error("[WRITE] empty path/name");
 			}
+
 			std::ofstream out_file;
 			out_file.open(constructFilePath(), std::ios::binary | std::ios::out);  // create
 			if (!out_file.is_open())
 			{  // can also check out_file.fail()
-				throw std::runtime_error("file open/create error");
+				throw std::runtime_error("[WRITE] filestream open/file create error");
 			}
+
+			if (const size_t max_size = std::numeric_limits<std::streamsize>::max();
+			    m_source_string.size() > max_size)
+			{
+				throw std::runtime_error("[WRITE] file content too long for writing");
+			}
+
 			out_file.write(m_source_string.data(), static_cast<int64_t>(m_source_string.size()));
 			if (out_file.fail())
 			{
-				throw std::runtime_error("file writing error");
+				throw std::runtime_error("[WRITE] file writing error");
 			}
+
 			setIsUnsaved(false);
 		}
 
@@ -110,7 +122,21 @@ namespace StrawPen
 			m_filename = new_filename;
 		}
 
+		void deleteFromDisk()
+		{
+			if (!existsOnDisk())
+			{
+				spdlog::warn("[DELETE] File does not exist on disk");
+				return;
+			}
+			if (!std::filesystem::remove(constructFilePath()))
+			{
+				throw std::runtime_error("File deletion failed");
+			}
+		}
+
 		bool existsOnDisk() const { return std::filesystem::is_regular_file(constructFilePath()); }
+
 		// ===================================================================
 
 		std::filesystem::path constructFilePath() const
