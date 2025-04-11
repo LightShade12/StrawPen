@@ -81,7 +81,7 @@ namespace StrawPen
 				throw std::runtime_error("empty path");
 			}
 			std::ofstream out_file;
-			out_file.open(getFullPath(), std::ios::binary | std::ios::out);  // create
+			out_file.open(constructFilePath(), std::ios::binary | std::ios::out);  // create
 			if (!out_file.is_open())
 			{  // can also check out_file.fail()
 				throw std::runtime_error("file open/create error");
@@ -94,9 +94,26 @@ namespace StrawPen
 			setIsUnsaved(false);
 		}
 
+		void rename(const std::string& new_filename)
+		{
+			if (existsOnDisk())
+			{
+				auto old_filepath = constructFilePath();
+				std::filesystem::path new_filepath = m_dir_path;
+				new_filepath.append(new_filename);
+
+				spdlog::debug("renaming src: {} to {}", old_filepath.string().c_str(),
+				              new_filepath.string().c_str());
+
+				std::filesystem::rename(old_filepath, new_filepath);
+			}
+			m_filename = new_filename;
+		}
+
+		bool existsOnDisk() const { return std::filesystem::is_regular_file(constructFilePath()); }
 		// ===================================================================
 
-		std::filesystem::path getFullPath() const
+		std::filesystem::path constructFilePath() const
 		{
 			std::filesystem::path fullfilepath(m_dir_path);
 			fullfilepath.append(m_filename);
@@ -176,6 +193,30 @@ namespace StrawPen
 			m_load_record.emplace(file);
 		}
 
+		void renameFile(int32_t idx, const std::string& new_filename)
+		{
+			ASCIITextFile& file = m_loadedfiles[idx].first;
+			m_load_record.erase(file);
+
+			file.rename(new_filename);
+			m_load_record.emplace(file);
+		}
+
+		void renameFile(const std::filesystem::path& filepath, const std::string& new_filename)
+		{
+			int idx = findFileIdx(filepath);
+			if (idx < 0)
+			{
+				spdlog::warn("rename target file not found in MEMORY");
+				return;
+			}
+			ASCIITextFile& file = m_loadedfiles[idx].first;
+			m_load_record.erase(file);
+
+			file.rename(new_filename);
+			m_load_record.emplace(file);
+		}
+
 		void erase(int idx)
 		{
 			const std::pair<ASCIITextFile, bool> loadedfile = *(m_loadedfiles.begin() + idx);
@@ -193,6 +234,18 @@ namespace StrawPen
 			return (m_load_record.find(file) != m_load_record.end());
 		}
 
+		int32_t findFileIdx(const std::filesystem::path& filepath)
+		{
+			for (size_t i = 0; i < getSize(); i++)
+			{
+				if (m_loadedfiles[i].first.constructFilePath() == filepath)
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+
 		size_t getSize()
 		{
 			if (m_load_record.size() != m_loadedfiles.size())
@@ -203,7 +256,6 @@ namespace StrawPen
 		}
 
 	private:
-		// TODO: make elements as pointers to map elements
 		std::vector<std::pair<ASCIITextFile, bool>> m_loadedfiles;
 		std::unordered_set<ASCIITextFile, SourceFileHasher, SourceFileEquality> m_load_record;
 	};  // LoadedFileRecord

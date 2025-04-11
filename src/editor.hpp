@@ -51,6 +51,17 @@ namespace StrawPen
 					m_source.createFile(path.append("unnamed"));
 					spdlog::debug("Handled create_file");
 				}
+				if (event == "rename_file")
+				{
+					const std::string new_name = direxp->getRenameInput();
+					m_source.renameFile(direxp->getAuxSelectedFilePath(), new_name);
+					spdlog::debug("Handled rename_file");
+				}
+				if (event == "delete_file")
+				{
+					m_source.deleteFile(direxp->getAuxSelectedFilePath());
+					spdlog::debug("Handled delete_file");
+				}
 			}
 			if (SourceEditor* srcedit = dynamic_cast<SourceEditor*>(sender); srcedit != nullptr)
 			{

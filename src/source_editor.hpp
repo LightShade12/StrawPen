@@ -55,6 +55,25 @@ namespace StrawPen
 			m_current_file_index = m_loadedfiles.getSize() - 1;  // TODO: narrowing concersion
 		}
 
+		void deleteFile(std::filesystem::path filepath) {}
+
+		void renameFile(const std::filesystem::path& filepath, const std::string& new_name)
+		{
+			const int idx = m_loadedfiles.findFileIdx(filepath);
+			const bool rename_target_loaded = idx >= 0;
+			if (rename_target_loaded)
+			{
+				m_loadedfiles.renameFile(idx, new_name);
+			}
+			else
+			{
+				auto newpath = filepath.parent_path();
+				std::filesystem::rename(filepath, newpath.append(new_name));
+				spdlog::debug("renamed NON-LOADED file: {} to {}", filepath.string().c_str(),
+				              newpath.string().c_str());
+			}
+		}
+
 		void saveFile() { m_loadedfiles[m_current_file_index].first.writeToDisk(); }
 
 		void render()
@@ -70,7 +89,7 @@ namespace StrawPen
 				if (ImGui::Button("Reload"))
 				{
 					m_loadedfiles[m_current_file_index].first = ASCIITextFile::loadFromDisk(
-					    m_loadedfiles[m_current_file_index].first.getFullPath());
+					    m_loadedfiles[m_current_file_index].first.constructFilePath());
 				}
 				ImGui::SameLine();
 
@@ -91,7 +110,8 @@ namespace StrawPen
 				if (ImGui::InputTextWithHint(":File Name", "main.cxx", &m_filename_input_buff,
 				                             ImGuiInputTextFlags_EnterReturnsTrue))
 				{
-					m_loadedfiles[m_current_file_index].first.setFileName(m_filename_input_buff);
+					// m_loadedfiles[m_current_file_index].first.rename(m_filename_input_buff);
+					m_loadedfiles.renameFile(m_current_file_index, m_filename_input_buff);
 				}
 
 				// =================================================================
@@ -105,15 +125,17 @@ namespace StrawPen
 							ImGui::PushID(i);
 							auto& file = m_loadedfiles[i];
 							if (file.second &&
-							    ImGui::BeginTabItem(file.first.getFileName().c_str(), &file.second,
-							                        (file.first.isUnsaved()) ?
-							                            ImGuiTabItemFlags_UnsavedDocument :
-							                            0))
+							    ImGui::BeginTabItem(
+							        file.first.getFileName().c_str(), &file.second,
+							        (file.first.isUnsaved() || !file.first.existsOnDisk()) ?
+							            ImGuiTabItemFlags_UnsavedDocument :
+							            0))
 							{
 								m_filename_input_buff = file.first.getFileName();
 								m_current_file_index = i;
-								ImGui::Text("%s",
-								            file.first.getFullPath().string().c_str());  // FILEPATH
+								ImGui::Text(
+								    "%s",
+								    file.first.constructFilePath().string().c_str());  // FILEPATH
 
 								if (ImGui::InputTextMultiline("###srctextinput",
 								                              file.first.getCharBufferPtr(),

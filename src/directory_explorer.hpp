@@ -54,36 +54,23 @@ namespace StrawPen
 				    std::make_pair(false, "");  // TODO: rename var; make it into member field
 				file_ctx_data.first = false;
 
-				static std::string rename_input;
-
 				// file ctx popup menu
 				if (ImGui::BeginPopup("file_ctx"))
 				{
 					if (ImGui::Button("rename file"))
 					{
-						rename_input = "";
+						m_rename_input_str = "";
 						ImGui::OpenPopup("rename_dialog");
 					};
 					// rename dialog
 					if (ImGui::BeginPopup("rename_dialog"))
 					{
-						ImGui::Text("Rename");
-						if (ImGui::InputTextWithHint("###renamefield", "new name", &rename_input,
+						ImGui::Text("Rename File");
+						if (ImGui::InputTextWithHint("###renamefield", "new name",
+						                             &m_rename_input_str,
 						                             ImGuiInputTextFlags_EnterReturnsTrue))
 						{
-							std::filesystem::path new_file =
-							    file_ctx_data.second.parent_path().append(rename_input);
-							spdlog::debug("renaming src: {} to {}",
-							              file_ctx_data.second.string().c_str(),
-							              new_file.string().c_str());
-							try
-							{
-								std::filesystem::rename(file_ctx_data.second, new_file);
-							}
-							catch (const std::exception& e)
-							{
-								spdlog::error("EXCEPTION CAUGHT: {}", e.what());
-							}
+							requestFileRename(file_ctx_data.second);
 							ImGui::CloseCurrentPopup();
 						}
 						ImGui::EndPopup();
@@ -91,16 +78,7 @@ namespace StrawPen
 
 					if (ImGui::Button("delete file"))
 					{
-						if (std::filesystem::remove(file_ctx_data.second))
-						{
-							spdlog::debug("deleted file: {}",
-							              file_ctx_data.second.string().c_str());
-						}
-						else
-						{
-							spdlog::debug("delete FAILED: {}",
-							              file_ctx_data.second.string().c_str());
-						}
+						requestFileDelete(file_ctx_data.second);
 						ImGui::CloseCurrentPopup();
 					};
 					ImGui::EndPopup();
@@ -135,7 +113,7 @@ namespace StrawPen
 					// end root listing
 				}
 
-				// popups launch ==============================
+				// popups launchers ==============================
 
 				if (file_ctx_data.first)
 				{
@@ -152,6 +130,8 @@ namespace StrawPen
 
 		std::filesystem::path getWorkingDirectory() const { return m_working_dir; }
 		std::filesystem::path getSelectedFilePath() const { return m_selected_filepath; }
+		std::filesystem::path getAuxSelectedFilePath() const { return m_aux_selected_filepath; }
+		std::string getRenameInput() const { return m_rename_input_str; }
 
 	private:
 		/// @brief NOTE : call directly after TreeNodeEx()
@@ -190,6 +170,32 @@ namespace StrawPen
 			m_mediator->notify(this, "load_file");
 		}
 
+		void requestFileRename(const std::filesystem::path& filepath)
+		{
+			m_aux_selected_filepath = filepath;
+			spdlog::debug("requesting file rename {}", m_aux_selected_filepath.string().c_str());
+			m_mediator->notify(this, "rename_file");
+		}
+
+		void requestFileDelete(const std::filesystem::path& filepath)
+		{
+			// TODO: delegate to source editor
+			if (std::filesystem::remove(filepath))
+			{
+				spdlog::debug("deleted file: {}", filepath.string().c_str());
+			}
+			else
+			{
+				spdlog::debug("delete FAILED: {}", filepath.string().c_str());
+			}
+
+			return;
+
+			m_aux_selected_filepath = filepath;
+			spdlog::debug("requesting file delete {}", m_aux_selected_filepath.string().c_str());
+			m_mediator->notify(this, "delete_file");
+		}
+
 		bool recurseRenderDirectory(const std::filesystem::path& dir_path,
 		                            std::pair<bool, std::filesystem::path>* r_filectxrequest)
 		{
@@ -225,6 +231,8 @@ namespace StrawPen
 
 		std::filesystem::path m_working_dir;
 		std::filesystem::path m_selected_filepath;
+		std::filesystem::path m_aux_selected_filepath;
+		std::string m_rename_input_str;
 
 	};  // DirectoryExplorer
 
