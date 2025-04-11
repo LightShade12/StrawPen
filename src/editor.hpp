@@ -26,7 +26,7 @@ namespace StrawPen
 	public:
 		EditorLayer()
 		    : m_explorer(this, std::filesystem::current_path()),
-		      m_source(std::filesystem::current_path()) {};
+		      m_source(this, std::filesystem::current_path()) {};
 		~EditorLayer() override = default;
 
 		EditorLayer(const EditorLayer& other) = default;
@@ -50,6 +50,13 @@ namespace StrawPen
 					auto path = direxp->getWorkingDirectory();
 					m_source.createFile(path.append("unnamed"));
 					spdlog::debug("Handled create_file");
+				}
+			}
+			if (SourceEditor* srcedit = dynamic_cast<SourceEditor*>(sender); srcedit != nullptr)
+			{
+				if (event == "execute_test")
+				{
+					spdlog::debug("Handled test execution");
 				}
 			}
 		}
@@ -93,14 +100,27 @@ namespace StrawPen
 				ImGui::EndMainMenuBar();
 			}
 
+			ImGui::ShowDemoWindow();
+
 			m_source.render();
 
 			m_explorer.render();
 
-			ImGui::Begin("Output");
-			ImGui::End();
+			static std::string output_buffer = "";
 
-			ImGui::ShowDemoWindow();
+			ImGui::Begin("Output");
+			{
+				ImGui::Button("Clear");
+				ImGui::SameLine();
+				ImGui::Button("To top");
+
+				ImGui::BeginChild("txtout", ImVec2(0, 0), ImGuiChildFlags_Borders);
+				{
+					ImGui::TextWrapped("%s", output_buffer.c_str());
+				}
+				ImGui::EndChild();
+			}
+			ImGui::End();
 
 			// ================================================
 

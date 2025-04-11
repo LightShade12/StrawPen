@@ -10,6 +10,7 @@
 #include "spdlog/spdlog.h"
 // ==========================
 
+#include "mediator_system.hpp"
 #include "source_file.hpp"
 // ==========================
 
@@ -19,10 +20,11 @@
 namespace StrawPen
 {
 
-	class SourceEditor
+	class SourceEditor : public Component
 	{
 	public:
-		explicit SourceEditor(std::filesystem::path file_path) : m_working_dir(file_path) {};
+		explicit SourceEditor(Mediator* mediator, std::filesystem::path file_path)
+		    : Component(mediator), m_working_dir(file_path) {};
 
 		void loadFile(std::filesystem::path filepath)
 		{
@@ -79,6 +81,7 @@ namespace StrawPen
 
 				if (ImGui::Button("Execute"))
 				{
+					m_mediator->notify(this, "execute_test");
 				}
 				ImGui::SameLine();
 
