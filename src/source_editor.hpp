@@ -33,7 +33,7 @@ namespace StrawPen
 				spdlog::error("No file name in path");
 				return;
 			}
-			const SourceFile& file_load = SourceFile::loadFromFile(filepath);
+			const ASCIITextFile& file_load = ASCIITextFile::loadFromDisk(filepath);
 			if (m_loadedfiles.fileExists(file_load))
 			{
 				spdlog::debug("File already loaded");
@@ -45,7 +45,7 @@ namespace StrawPen
 
 		void createFile(std::filesystem::path filepath)
 		{
-			const SourceFile& newfile = SourceFile(filepath);
+			const ASCIITextFile& newfile = ASCIITextFile(filepath);
 			// if (m_load_record.find(newfile) != m_load_record.end())
 			// {
 			// 	spdlog::info("File already exists");
@@ -55,7 +55,7 @@ namespace StrawPen
 			m_current_file_index = m_loadedfiles.getSize() - 1;  // TODO: narrowing concersion
 		}
 
-		void saveFile() { m_loadedfiles[m_current_file_index].first.writeToFile(); }
+		void saveFile() { m_loadedfiles[m_current_file_index].first.writeToDisk(); }
 
 		void render()
 		{
@@ -69,7 +69,7 @@ namespace StrawPen
 
 				if (ImGui::Button("Reload"))
 				{
-					m_loadedfiles[m_current_file_index].first = SourceFile::loadFromFile(
+					m_loadedfiles[m_current_file_index].first = ASCIITextFile::loadFromDisk(
 					    m_loadedfiles[m_current_file_index].first.getFullPath());
 				}
 				ImGui::SameLine();
@@ -105,16 +105,22 @@ namespace StrawPen
 							ImGui::PushID(i);
 							auto& file = m_loadedfiles[i];
 							if (file.second &&
-							    ImGui::BeginTabItem(file.first.getFileName().c_str(), &file.second))
+							    ImGui::BeginTabItem(file.first.getFileName().c_str(), &file.second,
+							                        (file.first.isUnsaved()) ?
+							                            ImGuiTabItemFlags_UnsavedDocument :
+							                            0))
 							{
 								m_filename_input_buff = file.first.getFileName();
 								m_current_file_index = i;
 								ImGui::Text("%s",
 								            file.first.getFullPath().string().c_str());  // FILEPATH
 
-								ImGui::InputTextMultiline("###srctextinput",
-								                          file.first.getCharBufferPtr(),
-								                          ImGui::GetContentRegionAvail());
+								if (ImGui::InputTextMultiline("###srctextinput",
+								                              file.first.getCharBufferPtr(),
+								                              ImGui::GetContentRegionAvail()))
+								{
+									file.first.setIsUnsaved(true);
+								}
 
 								ImGui::EndTabItem();
 							}
