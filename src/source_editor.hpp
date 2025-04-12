@@ -172,7 +172,7 @@ namespace StrawPen
 								    "%s",
 								    file.first.constructFilePath().string().c_str());  // FILEPATH
 								ImGui::SetNextWindowScroll(ImVec2(0, scrolly * -10));
-								ImGui::BeginChild("lnx", ImVec2(30, 0), ImGuiChildFlags_None,
+								ImGui::BeginChild("lnx", ImVec2(40, 0), ImGuiChildFlags_None,
 								                  ImGuiWindowFlags_NoScrollbar);
 								{
 									int cnt =
@@ -200,10 +200,10 @@ namespace StrawPen
 										file.first.setIsUnsaved(true);
 									}
 
-									// scrolly = 0;
 									if (ImGui::IsItemHovered())
 									{
 										scrolly += ImGui::GetIO().MouseWheel;
+										scrolly = std::min(0.0f, scrolly);
 									}
 
 									// spdlog::debug("scroll {}", ImGui::GetScrollY());

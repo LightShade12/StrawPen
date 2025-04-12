@@ -37,8 +37,7 @@ namespace StrawPen
 
 		void notify(Component* sender, std::string event) override
 		{
-			if (DirectoryExplorer* direxp = dynamic_cast<DirectoryExplorer*>(sender);
-			    direxp != nullptr)
+			if (auto* direxp = dynamic_cast<DirectoryExplorer*>(sender); direxp != nullptr)
 			{
 				if (event == "load_file")
 				{
@@ -63,7 +62,7 @@ namespace StrawPen
 					spdlog::debug("Handled delete_file");
 				}
 			}
-			if (SourceEditor* srcedit = dynamic_cast<SourceEditor*>(sender); srcedit != nullptr)
+			if (auto* srcedit = dynamic_cast<SourceEditor*>(sender); srcedit != nullptr)
 			{
 				if (event == "execute_test")
 				{
@@ -118,7 +117,7 @@ namespace StrawPen
 			m_explorer.render();
 
 			static std::string output_buffer = "";
-
+			// output_buffer = m_temp;
 			ImGui::Begin("Output");
 			{
 				ImGui::Button("Clear");
@@ -154,6 +153,13 @@ namespace StrawPen
 		SourceEditor m_source_editor;
 		DirectoryExplorer m_explorer;
 		ImFont* m_custom_font = nullptr;
+		std::string m_temp = R"([main] Building folder: d:/dev0/projects/StrawPen/build 
+[build] Starting build
+[proc] Executing command: "C:\Program Files\CMake\bin\cmake.EXE" --build d:/dev0/projects/StrawPen/build --config Debug --target all --
+[build] [1/2   0% :: 0.006] Re-checking globbed directories...
+[build] ninja: no work to do.
+[driver] Build completed: 00:00:00.076
+[build] Build finished with exit code 0)";
 	};  // EditorLayer
 
 }  // namespace StrawPen
