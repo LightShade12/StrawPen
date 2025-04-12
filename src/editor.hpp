@@ -26,7 +26,7 @@ namespace StrawPen
 	public:
 		EditorLayer()
 		    : m_explorer(this, std::filesystem::current_path()),
-		      m_source(this, std::filesystem::current_path()) {};
+		      m_source_editor(this, std::filesystem::current_path()) {};
 		~EditorLayer() override = default;
 
 		EditorLayer(const EditorLayer& other) = default;
@@ -42,24 +42,24 @@ namespace StrawPen
 			{
 				if (event == "load_file")
 				{
-					m_source.loadFile(direxp->getSelectedFilePath());
+					m_source_editor.loadFile(direxp->getSelectedFilePath());
 					spdlog::debug("Handled load_file");
 				}
 				if (event == "create_file")
 				{
 					auto path = direxp->getWorkingDirectory();
-					m_source.createFile(path.append("unnamed"));
+					m_source_editor.createFile(path.append("unnamed"));
 					spdlog::debug("Handled create_file");
 				}
 				if (event == "rename_file")
 				{
 					const std::string new_name = direxp->getRenameInput();
-					m_source.renameFile(direxp->getAuxSelectedFilePath(), new_name);
+					m_source_editor.renameFile(direxp->getAuxSelectedFilePath(), new_name);
 					spdlog::debug("Handled rename_file");
 				}
 				if (event == "delete_file")
 				{
-					m_source.deleteFile(direxp->getAuxSelectedFilePath());
+					m_source_editor.deleteFile(direxp->getAuxSelectedFilePath());
 					spdlog::debug("Handled delete_file");
 				}
 			}
@@ -113,7 +113,7 @@ namespace StrawPen
 
 			ImGui::ShowDemoWindow();
 
-			m_source.render();
+			m_source_editor.render();
 
 			m_explorer.render();
 
@@ -146,12 +146,12 @@ namespace StrawPen
 			if (glfwGetKeyScancode(GLFW_KEY_S) == scancode && (action == GLFW_PRESS) &&
 			    (mods & GLFW_MOD_CONTROL))
 			{
-				m_source.saveFile();
+				m_source_editor.saveFile();
 			}
 		}
 
 	private:
-		SourceEditor m_source;
+		SourceEditor m_source_editor;
 		DirectoryExplorer m_explorer;
 		ImFont* m_custom_font = nullptr;
 	};  // EditorLayer

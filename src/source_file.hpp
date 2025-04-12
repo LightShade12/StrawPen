@@ -110,6 +110,7 @@ namespace StrawPen
 		{
 			if (existsOnDisk())
 			{
+				// disk item rename
 				auto old_filepath = constructFilePath();
 				std::filesystem::path new_filepath = m_dir_path;
 				new_filepath.append(new_filename);
@@ -119,6 +120,7 @@ namespace StrawPen
 
 				std::filesystem::rename(old_filepath, new_filepath);
 			}
+			// memory item rename
 			m_filename = new_filename;
 		}
 
@@ -211,8 +213,10 @@ namespace StrawPen
 
 		void add(const ASCIITextFile& file)
 		{
-			if (fileExists(file))
+			// indempotent file load handling
+			if (IsFileLoaded(file))
 			{
+				spdlog::debug("file already loaded");
 				return;
 			}
 			m_loadedfiles.emplace_back(file, true);
@@ -230,7 +234,7 @@ namespace StrawPen
 
 		void renameFile(const std::filesystem::path& filepath, const std::string& new_filename)
 		{
-			int idx = findFileIdx(filepath);
+			const int idx = findFileIdx(filepath);
 			if (idx < 0)
 			{
 				spdlog::warn("rename target file not found in MEMORY");
@@ -246,7 +250,7 @@ namespace StrawPen
 		void erase(int idx)
 		{
 			const std::pair<ASCIITextFile, bool> loadedfile = *(m_loadedfiles.begin() + idx);
-			if (!fileExists(loadedfile.first))
+			if (!IsFileLoaded(loadedfile.first))
 			{
 				throw std::runtime_error("erasing nonexistent element");
 				return;
@@ -255,9 +259,18 @@ namespace StrawPen
 			m_loadedfiles.erase(m_loadedfiles.begin() + idx);
 		}
 
-		bool fileExists(const ASCIITextFile& file)
+		bool IsFileLoaded(const ASCIITextFile& file)
 		{
 			return (m_load_record.find(file) != m_load_record.end());
+		}
+
+		bool IsFileLoaded(const std::filesystem::path& filepath)
+		{
+			if (!filepath.has_filename())
+			{
+				throw std::runtime_error("[Load query] invalid filepath; no filename");
+			}
+			return (m_load_record.find(ASCIITextFile(filepath)) != m_load_record.end());
 		}
 
 		int32_t findFileIdx(const std::filesystem::path& filepath)

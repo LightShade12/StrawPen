@@ -23,50 +23,64 @@ namespace StrawPen
 	class SourceEditor : public Component
 	{
 	public:
-		explicit SourceEditor(Mediator* mediator, std::filesystem::path file_path)
+		explicit SourceEditor(Mediator* mediator, const std::filesystem::path& file_path)
 		    : Component(mediator), m_working_dir(file_path) {};
 
-		void loadFile(std::filesystem::path filepath)
+		void loadFile(const std::filesystem::path& filepath)
 		{
 			if (!filepath.has_filename())
 			{
-				spdlog::error("No file name in path");
-				return;
+				throw std::runtime_error("no filename in path");
 			}
-			const ASCIITextFile& file_load = ASCIITextFile::loadFromDisk(filepath);
-			if (m_loadedfiles.fileExists(file_load))
+			if (m_loadedfiles.IsFileLoaded(filepath))
 			{
 				spdlog::debug("File already loaded");
 				return;
 			}
+			const ASCIITextFile& file_load = ASCIITextFile::loadFromDisk(filepath);
 			m_loadedfiles.add(file_load);
 			m_current_file_index = m_loadedfiles.getSize() - 1;  // TODO: narrowing concersion
 		}
 
-		void createFile(std::filesystem::path filepath)
+		void createFile(const std::filesystem::path& filepath)
 		{
 			const ASCIITextFile& newfile = ASCIITextFile(filepath);
-			// if (m_load_record.find(newfile) != m_load_record.end())
-			// {
-			// 	spdlog::info("File already exists");
-			// 	return;
-			// }
+
 			m_loadedfiles.add(newfile);
 			m_current_file_index = m_loadedfiles.getSize() - 1;  // TODO: narrowing concersion
 		}
 
-		void deleteFile(std::filesystem::path filepath) {}
+		void deleteFile(const std::filesystem::path& filepath)
+		{
+			const int idx = m_loadedfiles.findFileIdx(filepath);
+			const bool is_delete_target_loaded = idx >= 0;
+			if (is_delete_target_loaded)
+			{
+				m_loadedfiles[idx].first.deleteFromDisk();
+				m_loadedfiles.erase(idx);  // should we unload the file?
+			}
+			else
+			{
+				if (!std::filesystem::remove(filepath))
+				{
+					throw std::runtime_error("[DEL] File deletion failed");
+				}
+			}
+		}
 
 		void renameFile(const std::filesystem::path& filepath, const std::string& new_name)
 		{
 			const int idx = m_loadedfiles.findFileIdx(filepath);
-			const bool rename_target_loaded = idx >= 0;
-			if (rename_target_loaded)
+			const bool is_rename_target_loaded = idx >= 0;  // is target in memory as well
+
+			if (is_rename_target_loaded)
 			{
+				// disk and memory item rename
 				m_loadedfiles.renameFile(idx, new_name);
 			}
 			else
 			{
+				// manual disk item rename
 				auto newpath = filepath.parent_path();
 				std::filesystem::rename(filepath, newpath.append(new_name));
 				spdlog::debug("renamed NON-LOADED file: {} to {}", filepath.string().c_str(),
@@ -80,6 +94,7 @@ namespace StrawPen
 		{
 			ImGui::Begin("Source Editor");
 			{
+				ImGui::Text("DBG: ld files: %zu", m_loadedfiles.getSize());
 				if (ImGui::Button("Save"))
 				{
 					saveFile();
@@ -104,13 +119,27 @@ namespace StrawPen
 				}
 				ImGui::SameLine();
 
-				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
-				                        ImGui::CalcTextSize(":File Name	").x);
-
-				if (ImGui::InputTextWithHint(":File Name", "main.cxx", &m_filename_input_buff,
-				                             ImGuiInputTextFlags_EnterReturnsTrue))
 				{
-					m_loadedfiles.renameFile(m_current_file_index, m_filename_input_buff);
+					ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
+					                        ImGui::CalcTextSize(":File Name	").x);
+
+					bool is_load_buf_empty = m_loadedfiles.getSize() <= 0;
+					if (is_load_buf_empty)
+					{
+						m_filename_input_buff = "";
+						ImGui::BeginDisabled();
+					}
+					if (ImGui::InputTextWithHint(":File Name", "main.cxx...",
+					                             &m_filename_input_buff,
+					                             ImGuiInputTextFlags_EnterReturnsTrue))
+					{
+						m_loadedfiles.renameFile(m_current_file_index, m_filename_input_buff);
+					}
+					if (is_load_buf_empty)
+					{
+						ImGui::SetItemTooltip("create/open a file to rename");
+						ImGui::EndDisabled();
+					}
 				}
 
 				// =================================================================

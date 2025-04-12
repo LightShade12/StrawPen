@@ -173,24 +173,12 @@ namespace StrawPen
 		void requestFileRename(const std::filesystem::path& filepath)
 		{
 			m_aux_selected_filepath = filepath;
-			spdlog::debug("requesting file rename {}", m_aux_selected_filepath.string().c_str());
+			spdlog::debug("requesting file rename: {}", m_aux_selected_filepath.string().c_str());
 			m_mediator->notify(this, "rename_file");
 		}
 
 		void requestFileDelete(const std::filesystem::path& filepath)
 		{
-			// TODO: delegate to source editor
-			if (std::filesystem::remove(filepath))
-			{
-				spdlog::debug("deleted file: {}", filepath.string().c_str());
-			}
-			else
-			{
-				spdlog::debug("delete FAILED: {}", filepath.string().c_str());
-			}
-
-			return;
-
 			m_aux_selected_filepath = filepath;
 			spdlog::debug("requesting file delete {}", m_aux_selected_filepath.string().c_str());
 			m_mediator->notify(this, "delete_file");
