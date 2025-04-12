@@ -14,6 +14,7 @@
 #include "source_file.hpp"
 // ==========================
 
+#include <algorithm>
 #include <filesystem>
 #include <string>
 
@@ -94,7 +95,9 @@ namespace StrawPen
 		{
 			ImGui::Begin("Source Editor");
 			{
-				ImGui::Text("DBG: ld files: %zu", m_loadedfiles.getSize());
+				static float scrolly = 0;
+				ImGui::Text("DBG: ld fls: %zu| cfi: %d| scrly: %.3f", m_loadedfiles.getSize(),
+				            m_current_file_index, scrolly);
 				if (ImGui::Button("Save"))
 				{
 					saveFile();
@@ -152,25 +155,60 @@ namespace StrawPen
 						{
 							ImGui::PushID(i);
 							auto& file = m_loadedfiles[i];
-							if (file.second &&
-							    ImGui::BeginTabItem(
-							        file.first.getFileName().c_str(), &file.second,
-							        (file.first.isUnsaved() || !file.first.existsOnDisk()) ?
-							            ImGuiTabItemFlags_UnsavedDocument :
-							            0))
+
+							ImGuiTabItemFlags tab_flags =
+							    (file.first.isUnsaved() || !file.first.existsOnDisk()) ?
+							        ImGuiTabItemFlags_UnsavedDocument :
+							        0;
+							// tab_flags |=
+							//     (i == m_current_file_index) ? ImGuiTabItemFlags_SetSelected : 0;
+
+							if (file.second && ImGui::BeginTabItem(file.first.getFileName().c_str(),
+							                                       &file.second, tab_flags))
 							{
 								m_filename_input_buff = file.first.getFileName();
 								m_current_file_index = i;
 								ImGui::Text(
 								    "%s",
 								    file.first.constructFilePath().string().c_str());  // FILEPATH
-
-								if (ImGui::InputTextMultiline("###srctextinput",
-								                              file.first.getCharBufferPtr(),
-								                              ImGui::GetContentRegionAvail()))
+								ImGui::SetNextWindowScroll(ImVec2(0, scrolly * -10));
+								ImGui::BeginChild("lnx", ImVec2(30, 0), ImGuiChildFlags_None,
+								                  ImGuiWindowFlags_NoScrollbar);
 								{
-									file.first.setIsUnsaved(true);
+									int cnt =
+									    std::count(file.first.getCharBufferPtr()->begin(),
+									               file.first.getCharBufferPtr()->end(), '\n');
+									float cposy = ImGui::GetCursorPosY();
+									cposy += 2;
+									ImGui::SetCursorPosY(cposy);
+									for (int i = 0; i < cnt + 3; i++)
+									{
+										ImGui::Text(" %d", i);
+										cposy = ImGui::GetCursorPosY();
+										cposy -= 4;
+										ImGui::SetCursorPosY(cposy);
+									}
 								}
+								ImGui::EndChild();
+								ImGui::SameLine();
+								ImGui::BeginChild("TextArea");
+								{
+									if (ImGui::InputTextMultiline("###srctextinput",
+									                              file.first.getCharBufferPtr(),
+									                              ImGui::GetContentRegionAvail()))
+									{
+										file.first.setIsUnsaved(true);
+									}
+
+									// scrolly = 0;
+									if (ImGui::IsItemHovered())
+									{
+										scrolly += ImGui::GetIO().MouseWheel;
+									}
+
+									// spdlog::debug("scroll {}", ImGui::GetScrollY());
+								}
+								ImGui::EndChild();
 
 								ImGui::EndTabItem();
 							}
@@ -186,8 +224,6 @@ namespace StrawPen
 				ImGui::EndChild();
 			}
 			ImGui::End();
-
-			// spdlog::debug("loaded files:{}", m_loadedfiles.getSize());
 		}
 
 	private:
