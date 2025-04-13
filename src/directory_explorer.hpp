@@ -46,6 +46,11 @@ namespace StrawPen
 						m_mediator->notify(this, "create_file");
 						ImGui::CloseCurrentPopup();
 					}
+					if (ImGui::Button("Change directory"))
+					{
+						requestDirChange();
+						ImGui::CloseCurrentPopup();
+					}
 
 					ImGui::EndPopup();
 				}
@@ -84,6 +89,7 @@ namespace StrawPen
 					ImGui::EndPopup();
 				}
 
+				ImGui::Text("%s", m_working_dir.string().c_str());
 				// root cwd listing
 				if (ImGui::TreeNode(m_working_dir.filename().string().c_str()))
 				{
@@ -101,7 +107,7 @@ namespace StrawPen
 						{
 							// file object
 							ImGui::TreeNodeEx(
-							    (void*)(intptr_t)idx,
+							    reinterpret_cast<void*>(static_cast<intptr_t>(idx)),
 							    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
 							    entry.path().filename().string().c_str());
 
@@ -128,10 +134,18 @@ namespace StrawPen
 			ImGui::End();
 		}
 
-		std::filesystem::path getWorkingDirectory() const { return m_working_dir; }
-		std::filesystem::path getSelectedFilePath() const { return m_selected_filepath; }
-		std::filesystem::path getAuxSelectedFilePath() const { return m_aux_selected_filepath; }
-		std::string getRenameInput() const { return m_rename_input_str; }
+		void setWorkingDirectory(std::filesystem::path dir_path) { m_working_dir = dir_path; }
+
+		[[nodiscard]] std::filesystem::path getWorkingDirectory() const { return m_working_dir; }
+		[[nodiscard]] std::filesystem::path getSelectedFilePath() const
+		{
+			return m_selected_filepath;
+		}
+		[[nodiscard]] std::filesystem::path getAuxSelectedFilePath() const
+		{
+			return m_aux_selected_filepath;
+		}
+		[[nodiscard]] std::string getRenameInput() const { return m_rename_input_str; }
 
 	private:
 		/// @brief NOTE : call directly after TreeNodeEx()
@@ -182,6 +196,12 @@ namespace StrawPen
 			m_aux_selected_filepath = filepath;
 			spdlog::debug("requesting file delete {}", m_aux_selected_filepath.string().c_str());
 			m_mediator->notify(this, "delete_file");
+		}
+
+		void requestDirChange()
+		{
+			spdlog::debug("requesting dir change");
+			m_mediator->notify(this, "change_dir");
 		}
 
 		bool recurseRenderDirectory(const std::filesystem::path& dir_path,
