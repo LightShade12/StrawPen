@@ -39,4 +39,12 @@ jobs:
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       #run: ctest -C ${{env.BUILD_TYPE}}
-
+      
+    # --- upload LastTest.log as an artifact ---
+    #- name: Upload Test Logs (LastTest.log)
+     # uses: actions/upload-artifact@v4
+      #if: always() # IMPORTANT: Upload even if tests fail
+      #with:
+      #  name: test-logs
+       # path: ${{github.workspace}}/build/Testing/Temporary/LastTest.log
+      # --- End of artifact upload step ---
