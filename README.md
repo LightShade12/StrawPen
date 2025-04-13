@@ -37,7 +37,7 @@ Linux-KDE
 - Run chmod +x build.sh from repo root (adds executable priviledge to the script)
 - Run build.sh
 - The executable ```strawpen_rel``` is now in ```build/bin```
-#### CmakeLists.txt
+### CmakeLists.txt
 - Run ```cmake -B ./build``` in repo directory(where ```CmakeLists.txt``` resides). 
 - Now run ```cd ./build && cmake --build . --config Release```.This will start the compilation and linking with StrawPlate library and build the executable.
 - The output executable and runtime assets can now be found in ```build/bin```
