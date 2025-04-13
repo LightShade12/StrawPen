@@ -14,7 +14,7 @@ Basic Text Editor.
 
 ## Pre-Requisites:
 - Cmake (3.31 or above) : The build system
-- MSVC compiler: C++ compiler
+- C/C++ compiler : (tested on: MSVC/gcc/clang)
 
 ## Dependencies
 - StrawPlate library: https://github.com/LightShade12/StrawPlate
