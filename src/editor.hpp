@@ -181,6 +181,8 @@ namespace StrawPen
 			bool popenf = true;
 			bool popend = true;
 			bool popena = true;
+
+			// OPEN FILE POPUP
 			{
 				if (m_open_file_dialog)
 				{
@@ -208,8 +210,9 @@ namespace StrawPen
 					}
 					ImGui::EndPopup();
 				}
-			}
+			}  // OPEN FILE POPUP
 
+			// OPEN DIR POPUP
 			{
 				if (m_open_dir_dialog)
 				{
@@ -238,8 +241,9 @@ namespace StrawPen
 					}
 					ImGui::EndPopup();
 				}
-			}
+			}  // OPEN DIR POPUP
 
+			// OPEN ABOUT POPUP
 			{
 				if (m_open_about_dialog)
 				{
@@ -268,7 +272,7 @@ namespace StrawPen
 
 					ImGui::EndPopup();
 				}
-			}
+			}  // OPEN ABOUT POPUP
 
 			if (m_custom_font != nullptr)
 			{
