@@ -44,3 +44,8 @@ Linux-KDE
 
 ## License
 StrawPen is licensed under MIT License.
+<hr>
+<footer>
+
+  2025
+</footer>
