@@ -30,7 +30,7 @@ namespace StrawPen
 		~EditorLayer() override = default;
 
 		EditorLayer(const EditorLayer& other) = default;
-		EditorLayer(EditorLayer&& other) = default;
+		EditorLayer(EditorLayer&& other) noexcept = default;
 
 		EditorLayer& operator=(const EditorLayer& other) = default;
 		EditorLayer& operator=(EditorLayer&& other) = default;
@@ -77,7 +77,7 @@ namespace StrawPen
 
 		void onRender(float timestep_secs) override
 		{
-			if (m_custom_font)
+			if (m_custom_font != nullptr)
 			{
 				ImGui::PushFont(m_custom_font);
 			}
@@ -116,7 +116,7 @@ namespace StrawPen
 
 			m_explorer.render();
 
-			static std::string output_buffer = "";
+			const static std::string output_buffer;
 			// output_buffer = m_temp;
 			ImGui::Begin("Output");
 			{
@@ -134,7 +134,7 @@ namespace StrawPen
 
 			// ================================================
 
-			if (m_custom_font)
+			if (m_custom_font != nullptr)
 			{
 				ImGui::PopFont();
 			}

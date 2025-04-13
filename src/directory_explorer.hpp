@@ -101,7 +101,7 @@ namespace StrawPen
 						{
 							// file object
 							ImGui::TreeNodeEx(
-							    (void*)(intptr_t)idx,
+							    reinterpret_cast<void*>(static_cast<intptr_t>(idx)),
 							    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
 							    entry.path().filename().string().c_str());
 
@@ -128,10 +128,16 @@ namespace StrawPen
 			ImGui::End();
 		}
 
-		std::filesystem::path getWorkingDirectory() const { return m_working_dir; }
-		std::filesystem::path getSelectedFilePath() const { return m_selected_filepath; }
-		std::filesystem::path getAuxSelectedFilePath() const { return m_aux_selected_filepath; }
-		std::string getRenameInput() const { return m_rename_input_str; }
+		[[nodiscard]] std::filesystem::path getWorkingDirectory() const { return m_working_dir; }
+		[[nodiscard]] std::filesystem::path getSelectedFilePath() const
+		{
+			return m_selected_filepath;
+		}
+		[[nodiscard]] std::filesystem::path getAuxSelectedFilePath() const
+		{
+			return m_aux_selected_filepath;
+		}
+		[[nodiscard]] std::string getRenameInput() const { return m_rename_input_str; }
 
 	private:
 		/// @brief NOTE : call directly after TreeNodeEx()

@@ -16,15 +16,15 @@
 
 int main(int argc, char* argv[])
 {
-#ifdef DEBUG_BUILD
-	std::cout << "[THIS IS A DEBUG BUILD]\n\n";
-#endif
-#ifdef NDEBUG
-	std::cout << "[THIS IS A NON-DEBUG BUILD]\n\n";
-#endif
-
 	try
 	{
+#ifdef DEBUG_BUILD
+		std::cout << "[THIS IS A DEBUG BUILD]\n\n";
+#endif
+#ifdef NDEBUG
+		std::cout << "[THIS IS A NON-DEBUG BUILD]\n\n";
+#endif
+
 		StrawPlate::WindowSettings win_settings;
 #ifdef DEBUG_BUILD
 		win_settings.label = "StrawPen Editor Debug";

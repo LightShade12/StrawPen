@@ -124,7 +124,7 @@ namespace StrawPen
 			m_filename = new_filename;
 		}
 
-		void deleteFromDisk()
+		void deleteFromDisk() const
 		{
 			if (!existsOnDisk())
 			{
@@ -137,30 +137,33 @@ namespace StrawPen
 			}
 		}
 
-		bool existsOnDisk() const { return std::filesystem::is_regular_file(constructFilePath()); }
+		[[nodiscard]] bool existsOnDisk() const
+		{
+			return std::filesystem::is_regular_file(constructFilePath());
+		}
 
 		// ===================================================================
 
-		std::filesystem::path constructFilePath() const
+		[[nodiscard]] std::filesystem::path constructFilePath() const
 		{
 			std::filesystem::path fullfilepath(m_dir_path);
 			fullfilepath.append(m_filename);
 			return fullfilepath;
 		}
 
-		std::string* getFileNamePtr() { return &m_filename; }
-		std::string getFileName() const { return m_filename; }
+		[[nodiscard]] std::string* getFileNamePtr() { return &m_filename; }
+		[[nodiscard]] std::string getFileName() const { return m_filename; }
 		void setFileName(const std::string& filename) { m_filename = filename; }
 
-		std::string getDirPath() const { return m_dir_path; }
+		[[nodiscard]] std::string getDirPath() const { return m_dir_path; }
 		void setDirPath(const std::string& path) { m_dir_path = path; }
 
 		std::string* getCharBufferPtr() { return &m_source_string; }
-		std::string getCharContent() const { return m_source_string; }
+		[[nodiscard]] std::string getCharContent() const { return m_source_string; }
 		void setCharContent(const std::string& data) { m_source_string = data; }
 
 		void setIsUnsaved(bool is_unsaved) { m_unsaved = is_unsaved; }
-		bool isUnsaved() const { return m_unsaved; }
+		[[nodiscard]] bool isUnsaved() const { return m_unsaved; }
 
 	private:
 		bool m_unsaved = false;
@@ -177,8 +180,8 @@ namespace std
 	{
 		size_t operator()(const StrawPen::ASCIITextFile& file) const
 		{
-			size_t hsh1 = std::hash<std::string> {}(file.getFileName());
-			size_t hsh2 = std::hash<std::string> {}(file.getDirPath());
+			const size_t hsh1 = std::hash<std::string> {}(file.getFileName());
+			const size_t hsh2 = std::hash<std::string> {}(file.getDirPath());
 			return hsh1 ^ (hsh2 << 1);
 		}
 	};  // hash<StrawPen::SourceFile>
@@ -279,7 +282,7 @@ namespace StrawPen
 			{
 				if (m_loadedfiles[i].first.constructFilePath() == filepath)
 				{
-					return i;
+					return static_cast<int32_t>(i);
 				}
 			}
 			return -1;

@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <string>
+#include <utility>
 
 namespace StrawPen
 {
@@ -24,8 +25,8 @@ namespace StrawPen
 	class SourceEditor : public Component
 	{
 	public:
-		explicit SourceEditor(Mediator* mediator, const std::filesystem::path& file_path)
-		    : Component(mediator), m_working_dir(file_path) {};
+		explicit SourceEditor(Mediator* mediator, std::filesystem::path file_path)
+		    : Component(mediator), m_working_dir(std::move(file_path)) {};
 
 		void loadFile(const std::filesystem::path& filepath)
 		{
@@ -40,7 +41,7 @@ namespace StrawPen
 			}
 			const ASCIITextFile& file_load = ASCIITextFile::loadFromDisk(filepath);
 			m_loadedfiles.add(file_load);
-			m_current_file_index = m_loadedfiles.getSize() - 1;  // TODO: narrowing concersion
+			m_current_file_index = static_cast<int>(m_loadedfiles.getSize() - 1);
 		}
 
 		void createFile(const std::filesystem::path& filepath)
@@ -48,7 +49,7 @@ namespace StrawPen
 			const ASCIITextFile& newfile = ASCIITextFile(filepath);
 
 			m_loadedfiles.add(newfile);
-			m_current_file_index = m_loadedfiles.getSize() - 1;  // TODO: narrowing concersion
+			m_current_file_index = static_cast<int>(m_loadedfiles.getSize() - 1);
 		}
 
 		void deleteFile(const std::filesystem::path& filepath)
@@ -95,9 +96,8 @@ namespace StrawPen
 		{
 			ImGui::Begin("Source Editor");
 			{
-				static float scrolly = 0;
-				ImGui::Text("DBG: ld fls: %zu| cfi: %d| scrly: %.3f", m_loadedfiles.getSize(),
-				            m_current_file_index, scrolly);
+				ImGui::Text("DBG: ld fls: %zu| cfi: %d", m_loadedfiles.getSize(),
+				            m_current_file_index);
 				if (ImGui::Button("Save"))
 				{
 					saveFile();
@@ -126,7 +126,7 @@ namespace StrawPen
 					ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
 					                        ImGui::CalcTextSize(":File Name	").x);
 
-					bool is_load_buf_empty = m_loadedfiles.getSize() <= 0;
+					const bool is_load_buf_empty = m_loadedfiles.getSize() <= 0;
 					if (is_load_buf_empty)
 					{
 						m_filename_input_buff = "";
@@ -156,7 +156,7 @@ namespace StrawPen
 							ImGui::PushID(i);
 							auto& file = m_loadedfiles[i];
 
-							ImGuiTabItemFlags tab_flags =
+							const ImGuiTabItemFlags tab_flags =
 							    (file.first.isUnsaved() || !file.first.existsOnDisk()) ?
 							        ImGuiTabItemFlags_UnsavedDocument :
 							        0;
@@ -171,44 +171,15 @@ namespace StrawPen
 								ImGui::Text(
 								    "%s",
 								    file.first.constructFilePath().string().c_str());  // FILEPATH
-								ImGui::SetNextWindowScroll(ImVec2(0, scrolly * -10));
-								ImGui::BeginChild("lnx", ImVec2(40, 0), ImGuiChildFlags_None,
-								                  ImGuiWindowFlags_NoScrollbar);
-								{
-									int cnt =
-									    std::count(file.first.getCharBufferPtr()->begin(),
-									               file.first.getCharBufferPtr()->end(), '\n');
-									float cposy = ImGui::GetCursorPosY();
-									cposy += 2;
-									ImGui::SetCursorPosY(cposy);
-									for (int i = 0; i < cnt + 3; i++)
-									{
-										ImGui::Text(" %d", i);
-										cposy = ImGui::GetCursorPosY();
-										cposy -= 4;
-										ImGui::SetCursorPosY(cposy);
-									}
-								}
-								ImGui::EndChild();
-								ImGui::SameLine();
-								ImGui::BeginChild("TextArea");
-								{
-									if (ImGui::InputTextMultiline("###srctextinput",
-									                              file.first.getCharBufferPtr(),
-									                              ImGui::GetContentRegionAvail()))
-									{
-										file.first.setIsUnsaved(true);
-									}
 
-									if (ImGui::IsItemHovered())
-									{
-										scrolly += ImGui::GetIO().MouseWheel;
-										scrolly = std::min(0.0f, scrolly);
-									}
-
-									// spdlog::debug("scroll {}", ImGui::GetScrollY());
+								if (ImGui::InputTextMultiline("###srctextinput",
+								                              file.first.getCharBufferPtr(),
+								                              ImGui::GetContentRegionAvail()))
+								{
+									file.first.setIsUnsaved(true);
 								}
-								ImGui::EndChild();
+
+								// spdlog::debug("scroll {}", ImGui::GetScrollY());
 
 								ImGui::EndTabItem();
 							}
@@ -228,7 +199,7 @@ namespace StrawPen
 
 	private:
 		std::string m_filename_input_buff;
-		int m_current_file_index = 0;
+		int32_t m_current_file_index = 0;
 
 		LoadedFileRecord m_loadedfiles;
 
