@@ -1,7 +1,11 @@
 # StrawPen
 Basic Text Editor.
 
-<img src="./docs/screenshot0.png" />
+<img src="./docs/screenshot0_win.png" />
+Windows-10
+
+<img src="./docs/screenshot1_kde.png" />
+Linux-KDE
 
 ### What it is
 <hr>
