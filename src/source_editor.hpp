@@ -25,8 +25,7 @@ namespace StrawPen
 	class SourceEditor : public Component
 	{
 	public:
-		explicit SourceEditor(Mediator* mediator, std::filesystem::path file_path)
-		    : Component(mediator), m_working_dir(std::move(file_path)) {};
+		explicit SourceEditor(Mediator* mediator) : Component(mediator) {};
 
 		void loadFile(const std::filesystem::path& filepath)
 		{
@@ -96,8 +95,10 @@ namespace StrawPen
 		{
 			ImGui::Begin("Source Editor");
 			{
+#ifdef DEBUG_BUILD
 				ImGui::Text("DBG: ld fls: %zu| cfi: %d", m_loadedfiles.getSize(),
 				            m_current_file_index);
+#endif
 				if (ImGui::Button("Save"))
 				{
 					saveFile();
@@ -111,15 +112,19 @@ namespace StrawPen
 				}
 				ImGui::SameLine();
 
+				ImGui::BeginDisabled();
 				if (ImGui::Button("Compile"))
 				{
 				}
+				ImGui::SetItemTooltip("Not implemented yet");
 				ImGui::SameLine();
 
 				if (ImGui::Button("Execute"))
 				{
 					m_mediator->notify(this, "execute_test");
 				}
+				ImGui::SetItemTooltip("Not implemented yet");
+				ImGui::EndDisabled();
 				ImGui::SameLine();
 
 				{
@@ -203,7 +208,6 @@ namespace StrawPen
 
 		LoadedFileRecord m_loadedfiles;
 
-		std::filesystem::path m_working_dir;
 	};  // SourceEditor
 
 }  // namespace StrawPen

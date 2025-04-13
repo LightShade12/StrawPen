@@ -46,6 +46,11 @@ namespace StrawPen
 						m_mediator->notify(this, "create_file");
 						ImGui::CloseCurrentPopup();
 					}
+					if (ImGui::Button("Change directory"))
+					{
+						requestDirChange();
+						ImGui::CloseCurrentPopup();
+					}
 
 					ImGui::EndPopup();
 				}
@@ -84,6 +89,7 @@ namespace StrawPen
 					ImGui::EndPopup();
 				}
 
+				ImGui::Text("%s", m_working_dir.string().c_str());
 				// root cwd listing
 				if (ImGui::TreeNode(m_working_dir.filename().string().c_str()))
 				{
@@ -127,6 +133,8 @@ namespace StrawPen
 			}
 			ImGui::End();
 		}
+
+		void setWorkingDirectory(std::filesystem::path dir_path) { m_working_dir = dir_path; }
 
 		[[nodiscard]] std::filesystem::path getWorkingDirectory() const { return m_working_dir; }
 		[[nodiscard]] std::filesystem::path getSelectedFilePath() const
@@ -188,6 +196,12 @@ namespace StrawPen
 			m_aux_selected_filepath = filepath;
 			spdlog::debug("requesting file delete {}", m_aux_selected_filepath.string().c_str());
 			m_mediator->notify(this, "delete_file");
+		}
+
+		void requestDirChange()
+		{
+			spdlog::debug("requesting dir change");
+			m_mediator->notify(this, "change_dir");
 		}
 
 		bool recurseRenderDirectory(const std::filesystem::path& dir_path,

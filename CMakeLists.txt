@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.31)
 
 #--------- Basic Setup -----------
-project(StrawPen VERSION 1.0 LANGUAGES C CXX)
+project(StrawPen VERSION 1.0.0.0 LANGUAGES C CXX)
 add_executable(strawpen)
 #--------- Compiler flags -----------
 target_compile_features(strawpen PRIVATE cxx_std_17)
@@ -25,6 +25,7 @@ else()
     # Release, RelWithDebInfo, MinSizeRel, or any other configs
     target_compile_definitions(strawpen PRIVATE NDEBUG)
 endif()
+target_compile_definitions(strawpen PRIVATE VERSION_STRING="v${PROJECT_VERSION}")
 
 # For multi-config generators (like Visual Studio), the above might not be enough
 # as CMAKE_BUILD_TYPE is often empty during configuration.
