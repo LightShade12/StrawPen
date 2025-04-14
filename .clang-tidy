@@ -16,11 +16,9 @@ Checks: 'modernize-*,\
          misc-*,\
          misc-non-private-member-variables-in-classes'
 
-# Optional: Specify header files to analyze or ignore
+# Optional: header files to analyze or ignore
 HeaderFilterRegex: '.*' # Analyze all headers included from the main source file
 # HeaderFilterRegex: '(your_project_dir|another_dir)/.*' # Only analyze headers in specific directories
 
-# Optional: Treat certain warnings as errors
 # WarningsAsErrors: 'modernize-use-nullptr,readability-identifier-naming'
-
-...
+---

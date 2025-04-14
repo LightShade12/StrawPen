@@ -205,7 +205,6 @@ namespace StrawPen
 	private:
 		std::string m_filename_input_buff;
 		int32_t m_current_file_index = 0;
-
 		LoadedFileRecord m_loadedfiles;
 
 	};  // SourceEditor

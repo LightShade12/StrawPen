@@ -20,9 +20,20 @@
 
 namespace
 {
+#ifdef _WIN32
+	// Win
+	constexpr const char* kDIR_HINT_STR = "C:/Files/MyDir...";
+	constexpr const char* kFILE_HINT_STR = "C:/MyDir/file.txt...";
+#else
+	// Unix
+	constexpr const char* kDIR_HINT_STR = "/home/mydir...";
+	constexpr const char* kFILE_HINT_STR = "/home/mydir/file.txt...";
+#endif
+
+	// temp utilities
 	inline void setCentreWindow(ImVec2 padding_ratio = ImVec2(0.8, 0.5))
 	{
-		auto wnd = StrawPlate::GLFWAppWindow::get();
+		auto* wnd = StrawPlate::GLFWAppWindow::get();
 		int width = 0, height = 0;
 		wnd->getSize(&width, &height);
 		auto size = ImVec2(width - (width * padding_ratio.x), height - (height * padding_ratio.y));
@@ -34,7 +45,7 @@ namespace
 	inline void setItemToParentCenter(float item_width)
 	{
 		auto parent_avail_size = ImGui::GetContentRegionAvail();
-		float offset_x = (parent_avail_size.x - item_width) / 2;
+		const float offset_x = (parent_avail_size.x - item_width) / 2;
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset_x);
 	}
 }  // namespace
@@ -42,6 +53,9 @@ namespace
 namespace StrawPen
 {
 
+	/***
+	 * @brief Editor core logic
+	 */
 	class EditorLayer : public StrawPlate::StrawPlateLayer, public Mediator
 	{
 	public:
@@ -54,6 +68,9 @@ namespace StrawPen
 		EditorLayer& operator=(const EditorLayer& other) = default;
 		EditorLayer& operator=(EditorLayer&& other) = default;
 
+		/// @brief Handle events from components
+		/// @param sender Component subclass
+		/// @param event event id string
 		void notify(Component* sender, std::string event) override
 		{
 			if (auto* direxp = dynamic_cast<DirectoryExplorer*>(sender); direxp != nullptr)
@@ -88,6 +105,7 @@ namespace StrawPen
 			}
 			if (auto* srcedit = dynamic_cast<SourceEditor*>(sender); srcedit != nullptr)
 			{
+				// Prototype
 				if (event == "execute_test")
 				{
 					spdlog::debug("Handled test execution");
@@ -162,6 +180,7 @@ namespace StrawPen
 
 			const static std::string output_buffer;
 
+			// Prototype
 			ImGui::Begin("Output");
 			{
 				ImGui::Button("Clear");
@@ -176,7 +195,7 @@ namespace StrawPen
 			}
 			ImGui::End();
 
-			// ================================================
+			// POPUPS LAUNCH ================================================
 
 			bool popenf = true;
 			bool popend = true;
@@ -194,7 +213,7 @@ namespace StrawPen
 				{
 					std::string filepath;
 					ImGui::Text("Open new file");
-					if (ImGui::InputTextWithHint(": file path", "C:/File/file.txt...", &filepath,
+					if (ImGui::InputTextWithHint(": file path", kFILE_HINT_STR, &filepath,
 					                             ImGuiInputTextFlags_EnterReturnsTrue))
 					{
 						spdlog::debug("new file load");
@@ -224,11 +243,11 @@ namespace StrawPen
 				{
 					std::string dir_path;
 					ImGui::Text("Open new directory");
-					if (ImGui::InputTextWithHint(": file path", "C:/File/MyDir...", &dir_path,
+					if (ImGui::InputTextWithHint(": file path", kDIR_HINT_STR, &dir_path,
 					                             ImGuiInputTextFlags_EnterReturnsTrue))
 					{
 						spdlog::debug("new dir load");
-						std::filesystem::path dirpth(dir_path);
+						const std::filesystem::path dirpth(dir_path);
 						if (!std::filesystem::is_directory(dirpth))
 						{
 							spdlog::error("invalid dir!");
@@ -280,14 +299,21 @@ namespace StrawPen
 			}
 		}
 
+		/// @brief Keybinds handling logic
+		/// @param key
+		/// @param scancode
+		/// @param action
+		/// @param mods
 		void onInput(int key, int scancode, int action, int mods) override
 		{
+			// save current file shortcut
 			if (glfwGetKeyScancode(GLFW_KEY_S) == scancode && (action == GLFW_PRESS) &&
 			    (mods & GLFW_MOD_CONTROL))
 			{
 				m_source_editor.saveFile();
 			}
 
+			// open new file shortcut
 			if (glfwGetKeyScancode(GLFW_KEY_O) == scancode && (action == GLFW_PRESS) &&
 			    (mods & GLFW_MOD_CONTROL))
 			{
@@ -302,6 +328,8 @@ namespace StrawPen
 		SourceEditor m_source_editor;
 		DirectoryExplorer m_explorer;
 		ImFont* m_custom_font = nullptr;
+
+		// Prototyping
 		std::string m_temp = R"([main] Building folder: d:/dev0/projects/StrawPen/build 
 			[build] Starting build
 			[proc] Executing command: "C:\Program Files\CMake\bin\cmake.EXE" --build d:/dev0/projects/StrawPen/build --config Debug --target all --
