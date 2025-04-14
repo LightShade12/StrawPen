@@ -31,21 +31,22 @@ namespace
 #endif
 
 	// temp utilities
-	inline void setCentreWindow(ImVec2 padding_ratio = ImVec2(0.8, 0.5))
+	inline void setCentreWindow(ImVec2 a_padding_ratio = ImVec2(0.8, 0.5))
 	{
 		auto* wnd = StrawPlate::GLFWAppWindow::get();
 		int width = 0, height = 0;
 		wnd->getSize(&width, &height);
-		auto size = ImVec2(width - (width * padding_ratio.x), height - (height * padding_ratio.y));
+		auto size =
+		    ImVec2(width - (width * a_padding_ratio.x), height - (height * a_padding_ratio.y));
 		ImGui::SetNextWindowSize(size);
 		ImGui::SetNextWindowPos(
-		    ImVec2((width * padding_ratio.x) / 2.0f, 30 + (height * padding_ratio.y) / 2.0f));
+		    ImVec2((width * a_padding_ratio.x) / 2.0f, 30 + (height * a_padding_ratio.y) / 2.0f));
 	}
 
-	inline void setItemToParentCenter(float item_width)
+	inline void setItemToParentCenter(float a_item_width)
 	{
 		auto parent_avail_size = ImGui::GetContentRegionAvail();
-		const float offset_x = (parent_avail_size.x - item_width) / 2;
+		const float offset_x = (parent_avail_size.x - a_item_width) / 2;
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset_x);
 	}
 }  // namespace
@@ -69,44 +70,44 @@ namespace StrawPen
 		EditorLayer& operator=(EditorLayer&& other) = default;
 
 		/// @brief Handle events from components
-		/// @param sender Component subclass
-		/// @param event event id string
-		void notify(Component* sender, std::string event) override
+		/// @param a_sender Component subclass
+		/// @param a_event event id string
+		void notify(Component* a_sender, std::string a_event) override
 		{
-			if (auto* direxp = dynamic_cast<DirectoryExplorer*>(sender); direxp != nullptr)
+			if (auto* direxp = dynamic_cast<DirectoryExplorer*>(a_sender); direxp != nullptr)
 			{
-				if (event == "load_file")
+				if (a_event == "load_file")
 				{
 					m_source_editor.loadFile(direxp->getSelectedFilePath());
 					spdlog::debug("Handled load_file");
 				}
-				if (event == "create_file")
+				if (a_event == "create_file")
 				{
 					auto path = direxp->getWorkingDirectory();
 					m_source_editor.createFile(path.append("unnamed"));
 					spdlog::debug("Handled create_file");
 				}
-				if (event == "rename_file")
+				if (a_event == "rename_file")
 				{
 					const std::string new_name = direxp->getRenameInput();
 					m_source_editor.renameFile(direxp->getAuxSelectedFilePath(), new_name);
 					spdlog::debug("Handled rename_file");
 				}
-				if (event == "delete_file")
+				if (a_event == "delete_file")
 				{
 					m_source_editor.deleteFile(direxp->getAuxSelectedFilePath());
 					spdlog::debug("Handled delete_file");
 				}
-				if (event == "change_dir")
+				if (a_event == "change_dir")
 				{
 					m_open_dir_dialog = true;
 					spdlog::debug("Handled change_dir");
 				}
 			}
-			if (auto* srcedit = dynamic_cast<SourceEditor*>(sender); srcedit != nullptr)
+			if (auto* srcedit = dynamic_cast<SourceEditor*>(a_sender); srcedit != nullptr)
 			{
 				// Prototype
-				if (event == "execute_test")
+				if (a_event == "execute_test")
 				{
 					spdlog::debug("Handled test execution");
 				}
@@ -117,7 +118,7 @@ namespace StrawPen
 
 		void onDetach() override {}
 
-		void onRender(float timestep_secs) override
+		void onRender(float a_timestep_secs) override
 		{
 			if (m_custom_font != nullptr)
 			{
@@ -300,22 +301,22 @@ namespace StrawPen
 		}
 
 		/// @brief Keybinds handling logic
-		/// @param key
-		/// @param scancode
-		/// @param action
-		/// @param mods
-		void onInput(int key, int scancode, int action, int mods) override
+		/// @param a_key
+		/// @param a_scancode
+		/// @param a_action
+		/// @param a_mods
+		void onInput(int a_key, int a_scancode, int a_action, int a_mods) override
 		{
 			// save current file shortcut
-			if (glfwGetKeyScancode(GLFW_KEY_S) == scancode && (action == GLFW_PRESS) &&
-			    (mods & GLFW_MOD_CONTROL))
+			if (glfwGetKeyScancode(GLFW_KEY_S) == a_scancode && (a_action == GLFW_PRESS) &&
+			    (a_mods & GLFW_MOD_CONTROL))
 			{
 				m_source_editor.saveFile();
 			}
 
 			// open new file shortcut
-			if (glfwGetKeyScancode(GLFW_KEY_O) == scancode && (action == GLFW_PRESS) &&
-			    (mods & GLFW_MOD_CONTROL))
+			if (glfwGetKeyScancode(GLFW_KEY_O) == a_scancode && (a_action == GLFW_PRESS) &&
+			    (a_mods & GLFW_MOD_CONTROL))
 			{
 				m_open_file_dialog = true;
 			}
