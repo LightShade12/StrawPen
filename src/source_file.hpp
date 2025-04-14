@@ -173,6 +173,7 @@ namespace StrawPen
 	};  // TextFile
 }  // namespace StrawPen
 
+// for hashing
 namespace std
 {
 	template <>
@@ -190,6 +191,7 @@ namespace std
 
 namespace StrawPen
 {
+
 	struct SourceFileHasher
 	{
 		size_t operator()(const ASCIITextFile& file) const

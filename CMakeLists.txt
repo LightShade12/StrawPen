@@ -26,6 +26,7 @@ else()
     # Release, RelWithDebInfo, MinSizeRel, or any other configs
     target_compile_definitions(strawpen PRIVATE NDEBUG)
 endif()
+
 target_compile_definitions(strawpen PRIVATE VERSION_STRING="v${PROJECT_VERSION}")
 
 # For multi-config generators (like Visual Studio), the above might not be enough
@@ -87,7 +88,7 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets"
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/config/imgui.ini"
     DESTINATION "${CMAKE_BINARY_DIR}/bin"
 )
-# linux .desktop
+# kde .desktop
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/linux/strawpen_editor.desktop"
     DESTINATION "${CMAKE_BINARY_DIR}/bin"
 )
