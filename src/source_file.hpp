@@ -8,17 +8,12 @@
 #include "spdlog/spdlog.h"
 //=========================
 
-#include <cstddef>
-#include <cstdint>
+#include <exception>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <numbers>
-#include <stdexcept>
 #include <string>
-#include <unordered_set>
-#include <utility>
-#include <vector>
+
 //========================
 
 namespace StrawPen
@@ -30,23 +25,23 @@ namespace StrawPen
 	class ASCIITextFile
 	{
 	public:
-		explicit ASCIITextFile(const std::filesystem::path& filepath)
-		    : m_filename(filepath.filename().string()),
-		      m_dir_path(filepath.parent_path().string()) {};
+		explicit ASCIITextFile(const std::filesystem::path& p_filepath)
+		    : m_filename(p_filepath.filename().string()),
+		      m_dir_path(p_filepath.parent_path().string()) {};
 
 		/// @brief Instantiate from existing filepath
-		/// @param file_path file path
+		/// @param p_file_path file path
 		/// @return loaded SourceFile
-		static ASCIITextFile loadFromDisk(const std::filesystem::path& file_path)
+		static ASCIITextFile loadFromDisk(const std::filesystem::path& p_file_path)
 		{
-			ASCIITextFile loaded_file(file_path);
+			ASCIITextFile loaded_file(p_file_path);
 			if (!loaded_file.existsOnDisk())
 			{
 				throw std::runtime_error("[LOAD] file does not exist on disk");
 			}
 
 			std::ifstream in_file_strm;
-			in_file_strm.open(file_path, std::ios::binary | std::ios::ate | std::ios::in);
+			in_file_strm.open(p_file_path, std::ios::binary | std::ios::ate | std::ios::in);
 			if (!in_file_strm.is_open())
 			{
 				throw std::runtime_error("[LOAD] file stream open error");
@@ -71,9 +66,9 @@ namespace StrawPen
 			return loaded_file;
 		}
 
-		bool operator==(const ASCIITextFile& other) const
+		bool operator==(const ASCIITextFile& p_other) const
 		{
-			return m_filename == other.m_filename && m_dir_path == other.m_dir_path;
+			return m_filename == p_other.m_filename && m_dir_path == p_other.m_dir_path;
 		}
 
 		void writeToDisk()
@@ -106,14 +101,14 @@ namespace StrawPen
 			setIsUnsaved(false);
 		}
 
-		void rename(const std::string& new_filename)
+		void rename(const std::string& p_new_filename)
 		{
 			if (existsOnDisk())
 			{
 				// disk item rename
 				auto old_filepath = constructFilePath();
 				std::filesystem::path new_filepath = m_dir_path;
-				new_filepath.append(new_filename);
+				new_filepath.append(p_new_filename);
 
 				spdlog::debug("renaming src: {} to {}", old_filepath.string().c_str(),
 				              new_filepath.string().c_str());
@@ -121,7 +116,7 @@ namespace StrawPen
 				std::filesystem::rename(old_filepath, new_filepath);
 			}
 			// memory item rename
-			m_filename = new_filename;
+			m_filename = p_new_filename;
 		}
 
 		void deleteFromDisk() const
@@ -153,16 +148,16 @@ namespace StrawPen
 
 		[[nodiscard]] std::string* getFileNamePtr() { return &m_filename; }
 		[[nodiscard]] std::string getFileName() const { return m_filename; }
-		void setFileName(const std::string& filename) { m_filename = filename; }
+		void setFileName(const std::string& p_filename) { m_filename = p_filename; }
 
 		[[nodiscard]] std::string getDirPath() const { return m_dir_path; }
-		void setDirPath(const std::string& path) { m_dir_path = path; }
+		void setDirPath(const std::string& p_path) { m_dir_path = p_path; }
 
 		std::string* getCharBufferPtr() { return &m_source_string; }
 		[[nodiscard]] std::string getCharContent() const { return m_source_string; }
-		void setCharContent(const std::string& data) { m_source_string = data; }
+		void setCharContent(const std::string& p_data) { m_source_string = p_data; }
 
-		void setIsUnsaved(bool is_unsaved) { m_unsaved = is_unsaved; }
+		void setIsUnsaved(bool p_is_unsaved) { m_unsaved = p_is_unsaved; }
 		[[nodiscard]] bool isUnsaved() const { return m_unsaved; }
 
 	private:
@@ -179,10 +174,10 @@ namespace std
 	template <>
 	struct hash<StrawPen::ASCIITextFile>
 	{
-		size_t operator()(const StrawPen::ASCIITextFile& file) const
+		size_t operator()(const StrawPen::ASCIITextFile& p_file) const
 		{
-			const size_t hsh1 = std::hash<std::string> {}(file.getFileName());
-			const size_t hsh2 = std::hash<std::string> {}(file.getDirPath());
+			const size_t hsh1 = std::hash<std::string> {}(p_file.getFileName());
+			const size_t hsh2 = std::hash<std::string> {}(p_file.getDirPath());
 			return hsh1 ^ (hsh2 << 1);
 		}
 	};  // hash<StrawPen::SourceFile>
@@ -194,114 +189,18 @@ namespace StrawPen
 
 	struct SourceFileHasher
 	{
-		size_t operator()(const ASCIITextFile& file) const
+		size_t operator()(const ASCIITextFile& p_file) const
 		{
-			return std::hash<ASCIITextFile> {}(file);
+			return std::hash<ASCIITextFile> {}(p_file);
 		}
 	};  // SourceFileHasher
 
 	struct SourceFileEquality
 	{
-		bool operator()(const ASCIITextFile& first, const ASCIITextFile& second) const
+		bool operator()(const ASCIITextFile& p_first, const ASCIITextFile& p_second) const
 		{
-			return first == second;
+			return p_first == p_second;
 		}
 	};  // SourceFileEquality
-
-	class LoadedFileRecord
-	{
-	public:
-		LoadedFileRecord() = default;
-
-		std::pair<ASCIITextFile, bool> operator[](int idx) const { return m_loadedfiles[idx]; }
-		std::pair<ASCIITextFile, bool>& operator[](int idx) { return m_loadedfiles[idx]; }
-
-		void add(const ASCIITextFile& file)
-		{
-			// indempotent file load handling
-			if (IsFileLoaded(file))
-			{
-				spdlog::debug("file already loaded");
-				return;
-			}
-			m_loadedfiles.emplace_back(file, true);
-			m_load_record.emplace(file);
-		}
-
-		void renameFile(int32_t idx, const std::string& new_filename)
-		{
-			ASCIITextFile& file = m_loadedfiles[idx].first;
-			m_load_record.erase(file);
-
-			file.rename(new_filename);
-			m_load_record.emplace(file);
-		}
-
-		void renameFile(const std::filesystem::path& filepath, const std::string& new_filename)
-		{
-			const int idx = findFileIdx(filepath);
-			if (idx < 0)
-			{
-				spdlog::warn("rename target file not found in MEMORY");
-				return;
-			}
-			ASCIITextFile& file = m_loadedfiles[idx].first;
-			m_load_record.erase(file);
-
-			file.rename(new_filename);
-			m_load_record.emplace(file);
-		}
-
-		void erase(int idx)
-		{
-			const std::pair<ASCIITextFile, bool> loadedfile = *(m_loadedfiles.begin() + idx);
-			if (!IsFileLoaded(loadedfile.first))
-			{
-				throw std::runtime_error("erasing nonexistent element");
-				return;
-			}
-			m_load_record.erase(loadedfile.first);
-			m_loadedfiles.erase(m_loadedfiles.begin() + idx);
-		}
-
-		bool IsFileLoaded(const ASCIITextFile& file)
-		{
-			return (m_load_record.find(file) != m_load_record.end());
-		}
-
-		bool IsFileLoaded(const std::filesystem::path& filepath)
-		{
-			if (!filepath.has_filename())
-			{
-				throw std::runtime_error("[Load query] invalid filepath; no filename");
-			}
-			return (m_load_record.find(ASCIITextFile(filepath)) != m_load_record.end());
-		}
-
-		int32_t findFileIdx(const std::filesystem::path& filepath)
-		{
-			for (size_t i = 0; i < getSize(); i++)
-			{
-				if (m_loadedfiles[i].first.constructFilePath() == filepath)
-				{
-					return static_cast<int32_t>(i);
-				}
-			}
-			return -1;
-		}
-
-		size_t getSize()
-		{
-			if (m_load_record.size() != m_loadedfiles.size())
-			{
-				throw std::runtime_error("desynchronized file containers");
-			}
-			return m_load_record.size();
-		}
-
-	private:
-		std::vector<std::pair<ASCIITextFile, bool>> m_loadedfiles;
-		std::unordered_set<ASCIITextFile, SourceFileHasher, SourceFileEquality> m_load_record;
-	};  // LoadedFileRecord
 
 }  // namespace StrawPen
