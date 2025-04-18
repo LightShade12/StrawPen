@@ -11,32 +11,37 @@
 #include <exception>
 #include <iostream>
 #include <memory>
-
 // ======================
+
+#if !defined(DEBUG_BUILD) && !defined(NDEBUG)
+#error "UNPECIFIED BUILD CONFIGURATION"
+#endif
 
 int main(int argc, char* argv[])
 {
 	try
 	{
-#ifdef DEBUG_BUILD
+#if defined(DEBUG_BUILD)
 		std::cout << "[THIS IS A DEBUG BUILD]\n\n";
-#endif
-#ifdef NDEBUG
+#elif defined(NDEBUG)
 		std::cout << "[THIS IS A NON-DEBUG BUILD]\n\n";
+#else
+#error "UNPECIFIED BUILD CONFIGURATION"
 #endif
 
 		StrawPlate::WindowSettings win_settings;
-#ifdef DEBUG_BUILD
+#if defined(DEBUG_BUILD)
 		win_settings.label = "StrawPen Editor Debug";
 		win_settings.width = 1920 * 0.5;
 		win_settings.height = 1080 * 0.5;
 		spdlog::set_level(spdlog::level::debug);
-#endif
-#ifdef NDEBUG
+#elif defined(NDEBUG)
 		win_settings.label = "StrawPen Editor Release";
 		win_settings.width = 1920;
 		win_settings.height = 1080;
 		win_settings.fullscreen = true;
+#else
+#error "UNPECIFIED BUILD CONFIGURATION"
 #endif
 		win_settings.icon_filepath = "./assets/icons/icon.png";
 		win_settings.gui_settings.font_ttf_filepath = "./assets/fonts/JetBrainsMono-Regular.ttf";
