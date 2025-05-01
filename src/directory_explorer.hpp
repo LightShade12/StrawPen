@@ -99,6 +99,7 @@ namespace StrawPen
 		std::filesystem::path m_working_dir;
 		std::filesystem::path m_selected_filepath;
 		std::filesystem::path m_aux_selected_filepath;
+		std::string m_search_string_buff;
 		std::string m_rename_input_str;
 
 	};  // DirectoryExplorer

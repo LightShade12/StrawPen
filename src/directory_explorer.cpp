@@ -10,8 +10,20 @@
 #include "imgui_stdlib.h"
 // ======================
 
+#include <algorithm>
 #include <cstdint>
 // ======================
+
+namespace
+{
+	std::string strToLower(const std::string& str)
+	{
+		std::string out = str;
+		std::transform(out.begin(), out.end(), out.begin(),
+		               [](unsigned char c) -> unsigned char { return std::tolower(c); });
+		return out;
+	}
+}  // namespace
 
 namespace StrawPen
 {
@@ -19,6 +31,9 @@ namespace StrawPen
 	{
 		ImGui::Begin("Directory");
 		{
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
+			                        ImGui::CalcTextSize("search").x - 5);
+			ImGui::InputTextWithHint("search", "enter filename...", &m_search_string_buff);
 			// dir ctx popup menu
 			if (ImGui::BeginPopup("dir_ctx"))
 			{
@@ -74,7 +89,7 @@ namespace StrawPen
 			if (ImGui::TreeNode(m_working_dir.filename().string().c_str()))
 			{
 				ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
-
+				bool is_searching = !m_search_string_buff.empty();
 				// listing
 				int idx = 0;
 				for (const auto& entry : std::filesystem::directory_iterator(m_working_dir))
@@ -85,13 +100,17 @@ namespace StrawPen
 					}
 					else
 					{
-						// file object
-						ImGui::TreeNodeEx(
-						    reinterpret_cast<void*>(static_cast<intptr_t>(idx)),
-						    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
-						    entry.path().filename().string().c_str());
+						if (strToLower(entry.path().filename().string())
+						        .find(strToLower(m_search_string_buff)) != std::string::npos)
+						{
+							// file object
+							ImGui::TreeNodeEx(
+							    reinterpret_cast<void*>(static_cast<intptr_t>(idx)),
+							    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
+							    entry.path().filename().string().c_str());
 
-						processFileClicks(entry.path(), &file_ctx_data);
+							processFileClicks(entry.path(), &file_ctx_data);
+						}
 					}
 					idx++;
 				}
@@ -149,7 +168,7 @@ namespace StrawPen
 		if (ImGui::TreeNode(dir_path.filename().string().c_str()))
 		{
 			// listing
-			int64_t i = 0;  // ignoring 32-bit systems
+			int64_t i = 0;
 			for (const auto& entry : std::filesystem::directory_iterator(dir_path))
 			{
 				if (entry.is_directory())
@@ -158,12 +177,17 @@ namespace StrawPen
 				}
 				else
 				{
-					// file entry
-					ImGui::TreeNodeEx(reinterpret_cast<void*>(i),
-					                  ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen,
-					                  "%s", entry.path().filename().string().c_str());
+					if (entry.path().filename().string().find(m_search_string_buff) !=
+					    std::string::npos)
+					{
+						// file entry
+						ImGui::TreeNodeEx(
+						    reinterpret_cast<void*>(i),
+						    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
+						    entry.path().filename().string().c_str());
 
-					processFileClicks(entry.path(), r_filectxrequest);
+						processFileClicks(entry.path(), r_filectxrequest);
+					}
 				}
 				i++;
 			}
