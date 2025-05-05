@@ -94,6 +94,9 @@ namespace StrawPen
 		bool recurseRenderDirectory(const std::filesystem::path& dir_path,
 		                            std::pair<bool, std::filesystem::path>* r_filectxrequest);
 
+		void recurseRenderSearchResults(const std::filesystem::path& dir_path,
+		                                std::pair<bool, std::filesystem::path>* r_filectxrequest);
+
 		//=============================
 
 		std::filesystem::path m_working_dir;

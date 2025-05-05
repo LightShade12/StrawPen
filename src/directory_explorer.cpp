@@ -87,37 +87,76 @@ namespace StrawPen
 			                        ImGui::CalcTextSize("search").x - 5);
 			ImGui::InputTextWithHint("search", "enter filename...", &m_search_string_buff);
 
-			// root cwd listing
-			if (ImGui::TreeNode(m_working_dir.filename().string().c_str()))
+			bool is_searching = !m_search_string_buff.empty();
+			if (is_searching)
 			{
-				ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
-
-				// listing
-				int idx = 0;
-				for (const auto& entry : std::filesystem::directory_iterator(m_working_dir))
+				// SEARCH VIEW
+				ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+				if (ImGui::TreeNode("Search results:"))
 				{
-					if (entry.is_directory())
+					// listing
+					int idx = 0;
+					for (const auto& entry : std::filesystem::directory_iterator(m_working_dir))
 					{
-						recurseRenderDirectory(entry.path(), &file_ctx_data);
-					}
-					else
-					{
-						if (strToLower(entry.path().filename().string())
-						        .find(strToLower(m_search_string_buff)) != std::string::npos)
+						if (entry.is_directory())
 						{
-							// file object
-							ImGui::TreeNodeEx(
-							    reinterpret_cast<void*>(static_cast<intptr_t>(idx)),
-							    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen, "%s",
-							    entry.path().filename().string().c_str());
-
-							processFileClicks(entry.path(), &file_ctx_data);
+							recurseRenderSearchResults(entry.path(), &file_ctx_data);
 						}
+						else
+						{
+							if (strToLower(entry.path().filename().string())
+							        .find(strToLower(m_search_string_buff)) != std::string::npos)
+							{
+								// file object
+								ImGui::TreeNodeEx(
+								    reinterpret_cast<void*>(static_cast<intptr_t>(idx)),
+								    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen,
+								    "%s", entry.path().filename().string().c_str());
+
+								processFileClicks(entry.path(), &file_ctx_data);
+							}
+						}
+						idx++;
 					}
-					idx++;
+					ImGui::TreePop();
 				}
-				ImGui::TreePop();
-				// end root listing
+			}
+			else
+			{
+				// DEFAULT VIEW
+				//  root cwd listing
+				ImGui::SetNextItemOpen(true, ImGuiCond_FirstUseEver);
+				if (ImGui::TreeNode(m_working_dir.filename().string().c_str()))
+				{
+					ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
+
+					// listing
+					int idx = 0;
+					for (const auto& entry : std::filesystem::directory_iterator(m_working_dir))
+					{
+						if (entry.is_directory())
+						{
+							recurseRenderDirectory(entry.path(), &file_ctx_data);
+						}
+						else
+						{
+							if (strToLower(entry.path().filename().string())
+							        .find(strToLower(m_search_string_buff)) != std::string::npos)
+							{
+								// file object
+								ImGui::TreeNodeEx(
+								    reinterpret_cast<void*>(static_cast<intptr_t>(idx)),
+								    ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen,
+								    "%s", entry.path().filename().string().c_str());
+
+								processFileClicks(entry.path(), &file_ctx_data);
+							}
+						}
+						idx++;
+					}
+					ImGui::TreePop();
+					// end root listing
+				}
 			}
 
 			// popups launchers ==============================
@@ -198,6 +237,38 @@ namespace StrawPen
 			return true;
 		}
 		return false;
+	}
+
+	void DirectoryExplorer::recurseRenderSearchResults(
+	    const std::filesystem::path& dir_path,
+	    std::pair<bool, std::filesystem::path>* r_filectxrequest)
+	{
+		// listing
+		int64_t i = 0;
+		for (const auto& entry : std::filesystem::directory_iterator(dir_path))
+		{
+			ImGui::PushID(i);
+			if (entry.is_directory())
+			{
+				recurseRenderSearchResults(entry.path(), r_filectxrequest);
+			}
+			else
+			{
+				if (entry.path().filename().string().find(m_search_string_buff) !=
+				    std::string::npos)
+				{
+					// file entry
+					ImGui::TreeNodeEx(reinterpret_cast<void*>(i),
+					                  ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen,
+					                  "%s", entry.path().filename().string().c_str());
+
+					processFileClicks(entry.path(), r_filectxrequest);
+				}
+			}
+			ImGui::PopID();
+			i++;
+		}
+		// end dir listing
 	}
 
 }  // namespace StrawPen
