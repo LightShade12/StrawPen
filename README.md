@@ -15,6 +15,7 @@ Linux-KDE
 - Create/read/write/save/rename/delete ASCII files
 - Directory Explorer for working efficiently within a directory
 - Multiple Tabs to work with multiple text files simulatenously
+- Search Files within working directory
 
 ## Pre-Requisites:
 - Cmake (3.31 or above) : The build system
