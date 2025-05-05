@@ -93,13 +93,25 @@ namespace StrawPen
 			}
 			ImGui::SameLine();
 
-			if (ImGui::Button("Reload"))
 			{
-				m_loadedfiles[m_current_file_index].first = ASCIITextFile::loadFromDisk(
-				    m_loadedfiles[m_current_file_index].first.constructFilePath());
+				const bool reloadable = m_current_file_index < m_loadedfiles.getSize();
+				if (!reloadable)
+				{
+					ImGui::BeginDisabled();
+				}
+				if (ImGui::Button("Reload"))
+				{
+					m_loadedfiles[m_current_file_index].first = ASCIITextFile::loadFromDisk(
+					    m_loadedfiles[m_current_file_index].first.constructFilePath());
+				}
+				if (!reloadable)
+				{
+					ImGui::SetItemTooltip("File must exist on disk");
+					ImGui::EndDisabled();
+				}
 			}
-			ImGui::SameLine();
 
+			ImGui::SameLine();
 			ImGui::BeginDisabled();
 			if (ImGui::Button("Compile"))
 			{
@@ -170,8 +182,6 @@ namespace StrawPen
 							{
 								file.first.setIsUnsaved(true);
 							}
-
-							// spdlog::debug("scroll {}", ImGui::GetScrollY());
 
 							ImGui::EndTabItem();
 						}

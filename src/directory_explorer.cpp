@@ -31,9 +31,6 @@ namespace StrawPen
 	{
 		ImGui::Begin("Directory");
 		{
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
-			                        ImGui::CalcTextSize("search").x - 5);
-			ImGui::InputTextWithHint("search", "enter filename...", &m_search_string_buff);
 			// dir ctx popup menu
 			if (ImGui::BeginPopup("dir_ctx"))
 			{
@@ -85,11 +82,16 @@ namespace StrawPen
 			}
 
 			ImGui::Text("%s", m_working_dir.string().c_str());
+
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
+			                        ImGui::CalcTextSize("search").x - 5);
+			ImGui::InputTextWithHint("search", "enter filename...", &m_search_string_buff);
+
 			// root cwd listing
 			if (ImGui::TreeNode(m_working_dir.filename().string().c_str()))
 			{
 				ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
-				bool is_searching = !m_search_string_buff.empty();
+
 				// listing
 				int idx = 0;
 				for (const auto& entry : std::filesystem::directory_iterator(m_working_dir))
@@ -195,7 +197,7 @@ namespace StrawPen
 			ImGui::TreePop();
 			return true;
 		}
-		return false;  // folder not opened
+		return false;
 	}
 
 }  // namespace StrawPen
