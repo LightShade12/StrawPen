@@ -10,7 +10,7 @@ add_executable(strawpen)
 #--------- Compiler flags -----------
 target_compile_features(strawpen PRIVATE cxx_std_17)
 
-# /utf-8 flag for MSVC compiler; character-set dep for spdlog
+# /utf-8 flag for MSVC; character-set dep for spdlog
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_compile_options(strawpen PRIVATE "/utf-8")
 endif()
@@ -27,7 +27,24 @@ else()
     target_compile_definitions(strawpen PRIVATE NDEBUG)
 endif()
 
-target_compile_definitions(strawpen PRIVATE VERSION_STRING="v${PROJECT_VERSION}")
+# Make REQUIRED?
+find_package(Git)
+if(Git_FOUND)
+    message("FOUND GIT")
+    execute_process(
+        COMMAND git --version
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        OUTPUT_VARIABLE GIT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    set(VERSION_STRING ON)
+
+    message("VALUE OUTPUT: ${VERSION_STRING}")
+
+    configure_file("${CMAKE_SOURCE_DIR}/src/version_info.h.in"
+        "${CMAKE_BINARY_DIR}/generated/version_info.h" @ONLY)
+    target_include_directories(strawpen PRIVATE "${CMAKE_BINARY_DIR}/generated")
+endif()
 
 # For multi-config generators (like Visual Studio), the above might not be enough
 # as CMAKE_BUILD_TYPE is often empty during configuration.
@@ -45,6 +62,7 @@ endif()
 
 #--------- Includes -----------
 target_include_directories(strawpen PRIVATE "${CMAKE_SOURCE_DIR}/src")
+
 #--------- Sources -----------
 file(GLOB_RECURSE MYSOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
 target_sources(strawpen PRIVATE ${MYSOURCES})

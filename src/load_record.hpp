@@ -98,7 +98,7 @@ namespace StrawPen
 			return -1;
 		}
 
-		size_t getSize()
+		size_t getSize() const
 		{
 			if (m_load_record.size() != m_loadedfiles.size())
 			{

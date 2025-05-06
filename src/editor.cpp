@@ -5,6 +5,9 @@
 
 #include "editor.hpp"
 
+#include "version_info.h"
+
+//=========================
 #include "theme.hpp"
 
 //============================
@@ -85,9 +88,14 @@ namespace StrawPen
 		if (auto* srcedit = dynamic_cast<SourceEditor*>(a_sender); srcedit != nullptr)
 		{
 			// Prototype
-			if (a_event == "execute_test")
+			if (a_event == "compile_current")
 			{
-				spdlog::debug("Handled test execution");
+				onEventCompileFile(srcedit->getCurrentFile());
+			}
+
+			if (a_event == "execute_current")
+			{
+				onEventExecuteFile(srcedit->getCurrentFile());
 			}
 		}
 	}
@@ -153,22 +161,7 @@ namespace StrawPen
 
 		m_explorer.render();
 
-		const static std::string output_buffer;
-
-		// Prototype
-		ImGui::Begin("Output");
-		{
-			ImGui::Button("Clear");
-			ImGui::SameLine();
-			ImGui::Button("To top");
-
-			ImGui::BeginChild("txtout", ImVec2(0, 0), ImGuiChildFlags_Borders);
-			{
-				ImGui::TextWrapped("%s", output_buffer.c_str());
-			}
-			ImGui::EndChild();
-		}
-		ImGui::End();
+		m_output.render();
 
 		// POPUPS LAUNCH ================================================
 
@@ -289,6 +282,28 @@ namespace StrawPen
 		{
 			m_open_file_dialog = true;
 		}
+	}
+
+	void EditorLayer::onEventCompileFile(const std::filesystem::path& filepath)
+	{
+		m_output.print("Compiling...");
+		std::string command = "clang++ ";
+		command += filepath.string();
+		command += " -o ";
+		command += filepath.parent_path().append("out.exe").string();
+		// command = "ping 218.00.12 -n 5";
+		m_output.executeCommand(command.c_str());
+		spdlog::debug("Handled compile command");
+	}
+
+	void EditorLayer::onEventExecuteFile(const std::filesystem::path& filepath)
+	{
+		onEventCompileFile(filepath);
+		m_output.print("Executing...");
+		std::string command;
+		command += filepath.parent_path().append("out.exe").string();
+		m_output.executeCommand(command.c_str());
+		spdlog::debug("Handled execute command");
 	}
 
 }  // namespace StrawPen

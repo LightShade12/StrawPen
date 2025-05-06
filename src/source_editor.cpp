@@ -94,8 +94,13 @@ namespace StrawPen
 			ImGui::SameLine();
 
 			{
-				const bool reloadable = m_current_file_index < m_loadedfiles.getSize();
-				if (!reloadable)
+				bool is_solid_file = m_current_file_index < m_loadedfiles.getSize();
+				if (is_solid_file)
+				{
+					is_solid_file &= m_loadedfiles[m_current_file_index].first.existsOnDisk();
+				}
+				//-----
+				if (!is_solid_file)
 				{
 					ImGui::BeginDisabled();
 				}
@@ -104,27 +109,33 @@ namespace StrawPen
 					m_loadedfiles[m_current_file_index].first = ASCIITextFile::loadFromDisk(
 					    m_loadedfiles[m_current_file_index].first.constructFilePath());
 				}
-				if (!reloadable)
+				ImGui::SameLine();
+				if (!is_solid_file)
+				{
+					ImGui::SetItemTooltip("File must exist on disk");
+				}
+
+				if (ImGui::Button("Compile"))
+				{
+					m_mediator->notify(this, "compile_current");
+				}
+				if (!is_solid_file)
+				{
+					ImGui::SetItemTooltip("File must exist on disk");
+				}
+				ImGui::SameLine();
+
+				if (ImGui::Button("Execute"))
+				{
+					m_mediator->notify(this, "execute_current");
+				}
+				if (!is_solid_file)
 				{
 					ImGui::SetItemTooltip("File must exist on disk");
 					ImGui::EndDisabled();
 				}
 			}
 
-			ImGui::SameLine();
-			ImGui::BeginDisabled();
-			if (ImGui::Button("Compile"))
-			{
-			}
-			ImGui::SetItemTooltip("Not implemented yet");
-			ImGui::SameLine();
-
-			if (ImGui::Button("Execute"))
-			{
-				m_mediator->notify(this, "execute_test");
-			}
-			ImGui::SetItemTooltip("Not implemented yet");
-			ImGui::EndDisabled();
 			ImGui::SameLine();
 
 			{

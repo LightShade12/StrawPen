@@ -33,6 +33,15 @@ namespace StrawPen
 
 		void saveFile() { m_loadedfiles[m_current_file_index].first.writeToDisk(); }
 
+		std::filesystem::path getCurrentFile() const
+		{
+			if (m_loadedfiles.getSize() <= m_current_file_index)
+			{
+				throw std::runtime_error("No files loaded!");
+			}
+			return m_loadedfiles[m_current_file_index].first.constructFilePath();
+		}
+
 		void render();
 
 	private:
