@@ -1,7 +1,10 @@
 #pragma once
 #include <cstdio>
+#include <future>
 #include <iostream>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace StrawPen
@@ -88,30 +91,9 @@ namespace StrawPen
 
 		constexpr int BUFFER_SIZE = 8192 * 2;
 
-		inline CommandResult executeCommand(const char* cmd, bool silent)
-		{
-			int ret_code = NULL;
-			std::string output;
-
-			{
-				const Pipe proc(cmd, &ret_code);
-
-				std::vector<char> buffer;
-				buffer.resize(BUFFER_SIZE);
-
-				while (fgets(buffer.data(), buffer.size(), proc.getStream()) != nullptr)
-				{
-					output += buffer.data();
-
-					if (!silent)
-					{
-						std::cout << buffer.data();
-					}
-				}
-			}
-
-			return {output, ret_code};
-		};
+		CommandResult executeCommand(const char* cmd, bool silent, std::string* stream_buffer,
+		                             std::mutex& bufferlock);
 
 	}  // namespace process
+
 }  // namespace StrawPen

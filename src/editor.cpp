@@ -51,7 +51,7 @@ namespace
 namespace StrawPen
 {
 
-	void EditorLayer::onAttach() { m_custom_font = ImGuiThemes::Dark(); }
+	void EditorLayer::onAttach() { m_custom_font = ImGuiThemes::VSRounded(); }
 
 	void EditorLayer::notify(Component* a_sender, std::string a_event)
 	{
@@ -286,12 +286,12 @@ namespace StrawPen
 
 	void EditorLayer::onEventCompileFile(const std::filesystem::path& filepath)
 	{
-		m_output.print("Compiling...");
+		m_output.print("[Compiling...]");
 		std::string command = "clang++ ";
 		command += filepath.string();
 		command += " -o ";
 		command += filepath.parent_path().append("out.exe").string();
-		// command = "ping 218.00.12 -n 5";
+		// command = "ping 127.0.0.1 -n 5";
 		m_output.executeCommand(command.c_str());
 		spdlog::debug("Handled compile command");
 	}
@@ -299,7 +299,7 @@ namespace StrawPen
 	void EditorLayer::onEventExecuteFile(const std::filesystem::path& filepath)
 	{
 		onEventCompileFile(filepath);
-		m_output.print("Executing...");
+		m_output.print("[Executing...]");
 		std::string command;
 		command += filepath.parent_path().append("out.exe").string();
 		m_output.executeCommand(command.c_str());

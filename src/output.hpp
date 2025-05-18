@@ -15,18 +15,19 @@ namespace StrawPen
 		OutputViewer(/* args */)
 		{
 			print("[Status]");
-			process::CommandResult res = process::executeCommand("clang++ --version", true);
-			print(res.std_stream_read);
-			res = process::executeCommand("ninja --version", true);
-			print(res.std_stream_read);
-			res = process::executeCommand("cmake --version", true);
-			print(res.std_stream_read);
+			process::CommandResult res = process::executeCommand(
+			    "clang++ --version", true, &m_buffer, std::ref(m_buffer_mutex));
+
+			res = process::executeCommand("ninja --version", true, &m_buffer,
+			                              std::ref(m_buffer_mutex));
+			res = process::executeCommand("cmake --version", true, &m_buffer,
+			                              std::ref(m_buffer_mutex));
 		};
 
 		void executeCommand(const char* command)
 		{
-			const process::CommandResult res = process::executeCommand(command, true);
-			print(res.std_stream_read);
+			m_proc_future = std::async(std::launch::async, process::executeCommand, command, true,
+			                           &m_buffer, std::ref(m_buffer_mutex));
 		};
 
 		void print(const char* message)
@@ -39,6 +40,8 @@ namespace StrawPen
 			m_buffer.append(message);
 			m_buffer.append("\n");
 		}
+
+		void clear() { m_buffer.clear(); }
 
 		void render()
 		{
@@ -53,6 +56,7 @@ namespace StrawPen
 
 				ImGui::BeginChild("txtout", ImVec2(0, 0), ImGuiChildFlags_Borders);
 				{
+					std::lock_guard lock(m_buffer_mutex);
 					ImGui::TextWrapped("%s", m_buffer.c_str());
 				}
 				ImGui::EndChild();
@@ -62,6 +66,8 @@ namespace StrawPen
 
 	private:
 		std::string m_buffer;
+		inline static std::future<process::CommandResult> m_proc_future;
+		inline static std::mutex m_buffer_mutex;
 	};
 
 }  // namespace StrawPen
